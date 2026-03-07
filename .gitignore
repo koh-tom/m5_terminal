@@ -1,0 +1,8 @@
+.pio/
+.vscode/
+*.bin
+*.png
+backup/
+
+# 実機用の設定 (wifiのパスワード入り)
+data/config.json
