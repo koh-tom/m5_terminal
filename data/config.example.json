@@ -1,0 +1,7 @@
+{
+  "wifi": [
+    { "ssid": "your-ssid", "pass": "your-password" }
+  ],
+  "tz": "JST-9",
+  "ntp": "ntp.nict.jp"
+}
