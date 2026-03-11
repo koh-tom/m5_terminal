@@ -26,6 +26,8 @@ static void saveRtc() {
   M5.Rtc.setDateTime(&t);
 }
 
+static const char* WDAY[] = {"日", "月", "火", "水", "木", "金", "土"};
+
 static void draw(time_t now) {
   struct tm t;
   localtime_r(&now, &t);
@@ -39,9 +41,10 @@ static void draw(time_t now) {
   canvas.setFont(&fonts::DejaVu72);
   canvas.drawString(buf, 160, 100);
 
-  snprintf(buf, sizeof(buf), "%04d/%02d/%02d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday);
-  canvas.setFont(&fonts::DejaVu24);
-  canvas.drawString(buf, 160, 160);
+  char date[40];
+  snprintf(date, sizeof(date), "%d月%d日 (%s)", t.tm_mon + 1, t.tm_mday, WDAY[t.tm_wday]);
+  canvas.setFont(&fonts::lgfxJapanGothicP_24);
+  canvas.drawString(date, 160, 160);
 
   canvas.pushSprite(0, 0);
 }
