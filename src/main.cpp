@@ -100,11 +100,12 @@ void setup() {
   M5.begin(mc);
   loadConfig();
 
-  setenv("TZ", cfg.tz, 1);
-  tzset();
+  // setSystemTimeFromRtc()の中でTZが壊れるので先に呼ぶ
   if (M5.Rtc.isEnabled()) {
     M5.Rtc.setSystemTimeFromRtc();
   }
+  setenv("TZ", cfg.tz, 1);
+  tzset();
   startNtp();
 
   canvas.setColorDepth(16);
