@@ -43,6 +43,12 @@ static void handleCommand(const char* s) {
     settimeofday(&tv, nullptr);
     if (M5.Rtc.isEnabled()) saveRtc();
     Serial.println("OK");
+  } else if (strcmp(s, "shot") == 0) {
+    // canvasの中身をそのまま送る (RGB565 big endian)
+    int w = canvas.width(), h = canvas.height();
+    Serial.printf("SHOT %d %d\n", w, h);
+    Serial.write((const uint8_t*)canvas.getBuffer(), w * h * 2);
+    Serial.flush();
   } else {
     Serial.println("ERR unknown");
   }
