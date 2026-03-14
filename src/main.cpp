@@ -26,6 +26,45 @@ static void saveRtc() {
   M5.Rtc.setDateTime(&t);
 }
 
+// シリアルから時刻合わせ: "time <unix秒>"
+static char line[96];
+static size_t lineLen = 0;
+static bool lineOverflow = false;
+
+static void handleCommand(const char* s) {
+  if (strncmp(s, "time ", 5) == 0) {
+    char* end;
+    long long v = strtoll(s + 5, &end, 10);
+    if (*end != '\0' || v < 1700000000LL || v > 4102444800LL) {
+      Serial.println("ERR bad time");
+      return;
+    }
+    struct timeval tv = {(time_t)v, 0};
+    settimeofday(&tv, nullptr);
+    if (M5.Rtc.isEnabled()) saveRtc();
+    Serial.println("OK");
+  } else {
+    Serial.println("ERR unknown");
+  }
+}
+
+static void pollSerial() {
+  while (Serial.available()) {
+    int c = Serial.read();
+    if (c == '\r') continue;
+    if (c == '\n') {
+      line[lineLen] = '\0';
+      if (!lineOverflow && lineLen > 0) handleCommand(line);
+      lineLen = 0;
+      lineOverflow = false;
+    } else if (lineLen < sizeof(line) - 1) {
+      line[lineLen++] = (char)c;
+    } else {
+      lineOverflow = true;
+    }
+  }
+}
+
 static const char* WDAY[] = {"日", "月", "火", "水", "木", "金", "土"};
 
 static void draw(time_t now) {
@@ -50,7 +89,9 @@ static void draw(time_t now) {
 }
 
 void setup() {
-  M5.begin();
+  auto mc = M5.config();
+  mc.serial_baudrate = 115200;
+  M5.begin(mc);
   loadConfig();
 
   setenv("TZ", cfg.tz, 1);
@@ -66,6 +107,7 @@ void setup() {
 
 void loop() {
   M5.update();
+  pollSerial();
 
   if (ntpSynced) {
     ntpSynced = false;
