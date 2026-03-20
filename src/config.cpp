@@ -4,6 +4,11 @@
 
 Config cfg;
 
+static int clampInt(JsonVariantConst v, int def, int lo, int hi) {
+  if (!v.is<int>()) return def;
+  return constrain(v.as<int>(), lo, hi);
+}
+
 static void copyStr(char* dst, size_t n, const char* src) {
   if (!src) src = "";
   strlcpy(dst, src, n);
@@ -38,6 +43,10 @@ bool loadConfig() {
   }
   if (doc["tz"].is<const char*>()) copyStr(cfg.tz, sizeof(cfg.tz), doc["tz"]);
   if (doc["ntp"].is<const char*>()) copyStr(cfg.ntp, sizeof(cfg.ntp), doc["ntp"]);
+
+  JsonObjectConst pomo = doc["pomodoro"];
+  cfg.workMin = clampInt(pomo["work"], cfg.workMin, 1, 180);
+  cfg.breakMin = clampInt(pomo["break"], cfg.breakMin, 1, 60);
 
   Serial.printf("[cfg] loaded, wifi=%d\n", cfg.wifiCount);
   return true;

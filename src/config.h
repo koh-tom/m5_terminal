@@ -13,6 +13,9 @@ struct Config {
   int wifiCount = 0;
   char tz[32] = "JST-9";
   char ntp[64] = "ntp.nict.jp";
+
+  int workMin = 50;
+  int breakMin = 10;
 };
 
 extern Config cfg;
