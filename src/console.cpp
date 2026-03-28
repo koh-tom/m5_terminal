@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "input.h"
 #include "timekeep.h"
 #include "ui.h"
 
@@ -21,6 +22,24 @@ static void handle(const char* s) {
     Serial.println("OK");
   } else if (strcmp(s, "shot") == 0) {
     uiShot();
+  } else if (strncmp(s, "btn ", 4) == 0 || strncmp(s, "hold ", 5) == 0) {
+    // 実機を触らずに動作確認する用
+    bool hold = s[0] == 'h';
+    int idx = s[hold ? 5 : 4] - 'a';
+    if (idx < 0 || idx > 2) {
+      Serial.println("ERR bad button");
+      return;
+    }
+    inputButton(idx, hold);
+    Serial.println("OK");
+  } else if (strncmp(s, "tap ", 4) == 0) {
+    int x, y;
+    if (sscanf(s + 4, "%d %d", &x, &y) != 2) {
+      Serial.println("ERR bad tap");
+      return;
+    }
+    inputTap(x, y);
+    Serial.println("OK");
   } else {
     Serial.println("ERR unknown");
   }
