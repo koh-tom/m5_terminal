@@ -16,7 +16,7 @@ static constexpr uint16_t C_WORK = rgb(235, 80, 70);
 static constexpr uint16_t C_BREAK = rgb(70, 190, 120);
 
 static constexpr int W = 320;
-static constexpr int FOOTER_Y = 200;
+static constexpr int FOOTER_Y = UI_FOOTER_Y;
 
 static M5Canvas canvas(&M5.Display);
 static Screen screen = Screen::Clock;
@@ -108,10 +108,15 @@ void uiLoop() {
 
 void uiDirty() { dirty = true; }
 
-void uiNextScreen() {
-  screen = (Screen)(((int)screen + 1) % (int)Screen::Count);
+Screen uiScreen() { return screen; }
+
+void uiMoveScreen(int dir) {
+  int n = (int)Screen::Count;
+  screen = (Screen)(((int)screen + dir + n) % n);
   dirty = true;
 }
+
+void uiNextScreen() { uiMoveScreen(1); }
 
 // canvasの中身をそのまま送る (RGB565 big endian)
 void uiShot() {
