@@ -1,6 +1,6 @@
 #include "focus.h"
 
-#include <Arduino.h>
+#include <M5Unified.h>
 
 #include "config.h"
 
@@ -13,12 +13,21 @@ static uint32_t lengthOf(Phase p) {
   return (p == Phase::Work ? cfg.workMin : cfg.breakMin) * 60000UL;
 }
 
+static void beep(int n) {
+  for (int i = 0; i < n; i++) {
+    M5.Speaker.tone(2000, 120);
+    delay(200);
+  }
+}
+
 static void nextPhase() {
   if (phase == Phase::Work) {
+    beep(3);
     // 休憩はそのまま始める
     phase = Phase::Break;
     state = RunState::Running;
   } else {
+    beep(2);
     phase = Phase::Work;
     state = RunState::Idle;
   }
