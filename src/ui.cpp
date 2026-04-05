@@ -69,10 +69,17 @@ static void drawFocus() {
   canvas.setTextColor(focusState() == RunState::Running ? C_TEXT : C_DIM);
   canvas.drawString(buf, W / 2, 100);
 
+  // 進捗バー
+  int bw = 240, bx = (W - bw) / 2, by = 150;
+  uint32_t len = focusLengthMs();
+  int done = len ? (int)((uint64_t)(len - focusRemainMs()) * bw / len) : 0;
+  canvas.fillRoundRect(bx, by, bw, 8, 4, C_PANEL);
+  if (done > 0) canvas.fillRoundRect(bx, by, done, 8, 4, color);
+
   if (focusState() == RunState::Paused) {
     canvas.setFont(&fonts::lgfxJapanGothicP_16);
     canvas.setTextColor(C_DIM);
-    canvas.drawString("一時停止中", W / 2, 160);
+    canvas.drawString("一時停止中", W / 2, 178);
   }
 }
 
