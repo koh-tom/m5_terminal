@@ -26,8 +26,11 @@ void inputButton(int idx, bool hold) {
 }
 
 void inputTap(int x, int y) {
-  (void)x;
   if (y >= UI_FOOTER_Y) return;
+  if (y < UI_HEADER_H) {
+    uiSetScreen((Screen)(x / UI_TAB_W));
+    return;
+  }
   if (uiScreen() == Screen::Focus) {
     focusToggle();
     uiDirty();

@@ -14,6 +14,7 @@ static constexpr uint16_t C_TEXT = rgb(235, 235, 235);
 static constexpr uint16_t C_DIM = rgb(130, 136, 150);
 static constexpr uint16_t C_WORK = rgb(235, 80, 70);
 static constexpr uint16_t C_BREAK = rgb(70, 190, 120);
+static constexpr uint16_t C_ACCENT = rgb(90, 160, 255);
 
 static constexpr int W = 320;
 static constexpr int FOOTER_Y = UI_FOOTER_Y;
@@ -25,6 +26,28 @@ static time_t lastNow = 0;
 static uint32_t lastRemainSec = 0;
 
 static const char* WDAY[] = {"日", "月", "火", "水", "木", "金", "土"};
+static const char* TABS[] = {"時計", "集中"};
+
+static void drawHeader(const struct tm& t) {
+  canvas.fillRect(0, 0, W, UI_HEADER_H, C_PANEL);
+  canvas.setFont(&fonts::lgfxJapanGothicP_16);
+  canvas.setTextDatum(middle_center);
+  for (int i = 0; i < (int)Screen::Count; i++) {
+    int x = i * UI_TAB_W;
+    bool cur = i == (int)screen;
+    canvas.setTextColor(cur ? C_TEXT : C_DIM);
+    canvas.drawString(TABS[i], x + UI_TAB_W / 2, UI_HEADER_H / 2);
+    if (cur) canvas.fillRect(x + 10, UI_HEADER_H - 3, UI_TAB_W - 20, 3, C_ACCENT);
+  }
+
+  if (screen != Screen::Clock) {
+    char buf[8];
+    snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
+    canvas.setTextDatum(middle_right);
+    canvas.setTextColor(C_TEXT);
+    canvas.drawString(buf, W - 6, UI_HEADER_H / 2);
+  }
+}
 
 static void drawFooter(const char* a, const char* b, const char* c) {
   const char* labels[] = {a, b, c};
@@ -45,12 +68,12 @@ static void drawClock(const struct tm& t) {
   char buf[16];
   snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
   canvas.setFont(&fonts::DejaVu72);
-  canvas.drawString(buf, W / 2, 80);
+  canvas.drawString(buf, W / 2, 86);
 
   char date[40];
   snprintf(date, sizeof(date), "%d月%d日 (%s)", t.tm_mon + 1, t.tm_mday, WDAY[t.tm_wday]);
   canvas.setFont(&fonts::lgfxJapanGothicP_24);
-  canvas.drawString(date, W / 2, 145);
+  canvas.drawString(date, W / 2, 152);
 }
 
 static void drawFocus() {
@@ -60,17 +83,17 @@ static void drawFocus() {
   canvas.setTextDatum(middle_center);
   canvas.setFont(&fonts::lgfxJapanGothicP_24);
   canvas.setTextColor(color);
-  canvas.drawString(work ? "研究" : "休憩", W / 2, 28);
+  canvas.drawString(work ? "研究" : "休憩", W / 2, 46);
 
   uint32_t sec = (focusRemainMs() + 999) / 1000;
   char buf[16];
   snprintf(buf, sizeof(buf), "%02lu:%02lu", (unsigned long)(sec / 60), (unsigned long)(sec % 60));
   canvas.setFont(&fonts::DejaVu72);
   canvas.setTextColor(focusState() == RunState::Running ? C_TEXT : C_DIM);
-  canvas.drawString(buf, W / 2, 100);
+  canvas.drawString(buf, W / 2, 104);
 
   // 進捗バー
-  int bw = 240, bx = (W - bw) / 2, by = 150;
+  int bw = 240, bx = (W - bw) / 2, by = 152;
   uint32_t len = focusLengthMs();
   int done = len ? (int)((uint64_t)(len - focusRemainMs()) * bw / len) : 0;
   canvas.fillRoundRect(bx, by, bw, 8, 4, C_PANEL);
@@ -79,7 +102,7 @@ static void drawFocus() {
   if (focusState() == RunState::Paused) {
     canvas.setFont(&fonts::lgfxJapanGothicP_16);
     canvas.setTextColor(C_DIM);
-    canvas.drawString("一時停止中", W / 2, 178);
+    canvas.drawString("一時停止中", W / 2, 180);
   }
 }
 
@@ -88,6 +111,7 @@ static void draw(time_t now) {
   localtime_r(&now, &t);
 
   canvas.fillScreen(C_BG);
+  drawHeader(t);
   switch (screen) {
     case Screen::Clock: drawClock(t); break;
     case Screen::Focus: drawFocus(); break;
@@ -124,6 +148,12 @@ void uiMoveScreen(int dir) {
 }
 
 void uiNextScreen() { uiMoveScreen(1); }
+
+void uiSetScreen(Screen s) {
+  if (s >= Screen::Count) return;
+  screen = s;
+  dirty = true;
+}
 
 // canvasの中身をそのまま送る (RGB565 big endian)
 void uiShot() {
