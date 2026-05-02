@@ -4,6 +4,7 @@
 #include "console.h"
 #include "focus.h"
 #include "input.h"
+#include "storage.h"
 #include "timekeep.h"
 #include "ui.h"
 
@@ -12,6 +13,7 @@ void setup() {
   mc.serial_baudrate = 115200;
   M5.begin(mc);
 
+  sdBegin();
   loadConfig();
   timeBegin();
   focusBegin();

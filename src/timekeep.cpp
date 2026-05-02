@@ -58,3 +58,9 @@ int todayYmd() {
   localtime_r(&now, &t);
   return (t.tm_year + 1900) * 10000 + (t.tm_mon + 1) * 100 + t.tm_mday;
 }
+
+void fmtTime(time_t t, char* buf, size_t n) {
+  struct tm tm;
+  localtime_r(&t, &tm);
+  strftime(buf, n, "%Y-%m-%d %H:%M:%S", &tm);
+}
