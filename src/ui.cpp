@@ -83,7 +83,11 @@ static void drawFocus() {
   canvas.setTextDatum(middle_center);
   canvas.setFont(&fonts::lgfxJapanGothicP_24);
   canvas.setTextColor(color);
-  canvas.drawString(work ? "研究" : "休憩", W / 2, 46);
+  const char* label = work ? "研究" : "休憩";
+  if (focusState() == RunState::Paused) {
+    label = work ? "研究 (一時停止中)" : "休憩 (一時停止中)";
+  }
+  canvas.drawString(label, W / 2, 46);
 
   uint32_t sec = (focusRemainMs() + 999) / 1000;
   char buf[16];
@@ -99,11 +103,17 @@ static void drawFocus() {
   canvas.fillRoundRect(bx, by, bw, 8, 4, C_PANEL);
   if (done > 0) canvas.fillRoundRect(bx, by, done, 8, 4, color);
 
-  if (focusState() == RunState::Paused) {
-    canvas.setFont(&fonts::lgfxJapanGothicP_16);
-    canvas.setTextColor(C_DIM);
-    canvas.drawString("一時停止中", W / 2, 180);
+  uint32_t total = focusTodaySec() / 60;
+  char today[48];
+  if (total >= 60) {
+    snprintf(today, sizeof(today), "今日の研究 %lu時間%02lu分 (%d回)",
+             (unsigned long)(total / 60), (unsigned long)(total % 60), focusTodayCount());
+  } else {
+    snprintf(today, sizeof(today), "今日の研究 %lu分 (%d回)", (unsigned long)total, focusTodayCount());
   }
+  canvas.setFont(&fonts::lgfxJapanGothicP_16);
+  canvas.setTextColor(C_DIM);
+  canvas.drawString(today, W / 2, 180);
 }
 
 static void draw(time_t now) {

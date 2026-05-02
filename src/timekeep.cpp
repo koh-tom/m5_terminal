@@ -50,3 +50,11 @@ void timeSet(time_t t) {
 bool timeValid() {
   return time(nullptr) > 1735689600;  // 2025-01-01
 }
+
+int todayYmd() {
+  if (!timeValid()) return 0;
+  time_t now = time(nullptr);
+  struct tm t;
+  localtime_r(&now, &t);
+  return (t.tm_year + 1900) * 10000 + (t.tm_mon + 1) * 100 + t.tm_mday;
+}
