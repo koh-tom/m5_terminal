@@ -1,8 +1,11 @@
 #include "console.h"
 
 #include <Arduino.h>
+#include <WiFi.h>
 
+#include "focus.h"
 #include "input.h"
+#include "storage.h"
 #include "timekeep.h"
 #include "ui.h"
 
@@ -10,8 +13,21 @@ static char line[96];
 static size_t lineLen = 0;
 static bool lineOverflow = false;
 
+static void printStatus() {
+  char buf[24];
+  fmtTime(time(nullptr), buf, sizeof(buf));
+  Serial.printf("time  %s%s\n", buf, timeValid() ? "" : " (invalid)");
+  Serial.printf("sd    %s\n", sdReady() ? "ok" : "none");
+  Serial.printf("wifi  %s\n", WiFi.isConnected() ? WiFi.SSID().c_str() : "-");
+  Serial.printf("focus %lus / %d\n", (unsigned long)focusTodaySec(), focusTodayCount());
+  Serial.printf("heap  %u\n", (unsigned)ESP.getFreeHeap());
+  Serial.println("OK");
+}
+
 static void handle(const char* s) {
-  if (strncmp(s, "time ", 5) == 0) {
+  if (strcmp(s, "status") == 0) {
+    printStatus();
+  } else if (strncmp(s, "time ", 5) == 0) {
     char* end;
     long long v = strtoll(s + 5, &end, 10);
     if (*end != '\0' || v < 1700000000LL || v > 4102444800LL) {
