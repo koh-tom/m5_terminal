@@ -24,9 +24,27 @@ static void printStatus() {
   Serial.println("OK");
 }
 
+// /labterm/ の下だけ読めるようにする
+static void catFile(const char* path) {
+  if (strncmp(path, "/labterm/", 9) != 0 || strstr(path, "..")) {
+    Serial.println("ERR bad path");
+    return;
+  }
+  File f = logFS().open(path, FILE_READ);
+  if (!f) {
+    Serial.println("ERR not found");
+    return;
+  }
+  while (f.available()) Serial.write(f.read());
+  f.close();
+  Serial.println("OK");
+}
+
 static void handle(const char* s) {
   if (strcmp(s, "status") == 0) {
     printStatus();
+  } else if (strncmp(s, "cat ", 4) == 0) {
+    catFile(s + 4);
   } else if (strncmp(s, "time ", 5) == 0) {
     char* end;
     long long v = strtoll(s + 5, &end, 10);
