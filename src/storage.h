@@ -1,9 +1,10 @@
 #pragma once
-#include <stddef.h>
+#include <FS.h>
 
-// SDカード (無くても動くようにする)
-bool sdBegin();
+// ログの保存先。SDがあればSD、無ければ内蔵flash(LittleFS)
+bool storageBegin();
 bool sdReady();
+fs::FS& logFS();
 
 // 1行追記。ファイルが新規ならheaderを先に書く
-bool sdAppend(const char* path, const char* line, const char* header = nullptr);
+bool logAppend(const char* path, const char* line, const char* header = nullptr);

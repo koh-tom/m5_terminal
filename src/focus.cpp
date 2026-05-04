@@ -28,7 +28,7 @@ static void logSegment(bool done) {
     fmtTime(segStart, a, sizeof(a));
     fmtTime(time(nullptr), b, sizeof(b));
     snprintf(line, sizeof(line), "%s,%s,%lu,%d", a, b, (unsigned long)(segMs / 1000), done ? 1 : 0);
-    sdAppend("/labterm/focus.csv", line, "start,end,sec,done");
+    logAppend("/labterm/focus.csv", line, "start,end,sec,done");
   }
   segStart = 0;
   segMs = 0;
@@ -49,7 +49,7 @@ static void checkDay() {
     char line[48];
     snprintf(line, sizeof(line), "%04d-%02d-%02d,%lu,%d", day / 10000, day / 100 % 100, day % 100,
              (unsigned long)(todayMs / 1000), todayCount);
-    sdAppend("/labterm/daily.csv", line, "date,sec,count");
+    logAppend("/labterm/daily.csv", line, "date,sec,count");
   }
   // 日付をまたいだら区間を切る
   bool running = segStart != 0;

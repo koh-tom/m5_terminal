@@ -13,7 +13,7 @@ void setup() {
   mc.serial_baudrate = 115200;
   M5.begin(mc);
 
-  sdBegin();
+  storageBegin();
   loadConfig();
   timeBegin();
   focusBegin();

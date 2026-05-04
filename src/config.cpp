@@ -15,10 +15,6 @@ static void copyStr(char* dst, size_t n, const char* src) {
 }
 
 bool loadConfig() {
-  if (!LittleFS.begin(true)) {
-    Serial.println("[cfg] littlefs mount failed");
-    return false;
-  }
   File f = LittleFS.open("/config.json", "r");
   if (!f) {
     Serial.println("[cfg] no config.json");
