@@ -36,14 +36,13 @@ fs::FS& logFS() {
 }
 
 bool logAppend(const char* path, const char* line, const char* header) {
-  fs::FS& fs = logFS();
-  bool exists = fs.exists(path);
-  File f = fs.open(path, FILE_APPEND);
+  // exists()はlittlefsだとエラーログが出るのでsizeで見る
+  File f = logFS().open(path, FILE_APPEND, true);
   if (!f) {
     Serial.printf("[fs] open failed: %s\n", path);
     return false;
   }
-  if (!exists && header) f.println(header);
+  if (f.size() == 0 && header) f.println(header);
   f.println(line);
   f.close();
   return true;
