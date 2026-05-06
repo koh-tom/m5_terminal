@@ -1,6 +1,9 @@
 #include "config.h"
 #include <ArduinoJson.h>
 #include <LittleFS.h>
+#include <SD.h>
+
+#include "storage.h"
 
 Config cfg;
 
@@ -15,7 +18,10 @@ static void copyStr(char* dst, size_t n, const char* src) {
 }
 
 bool loadConfig() {
-  File f = LittleFS.open("/config.json", "r");
+  // SDにあればそっちを優先
+  File f;
+  if (sdReady()) f = SD.open("/labterm/config.json", FILE_READ);
+  if (!f) f = LittleFS.open("/config.json", FILE_READ);
   if (!f) {
     Serial.println("[cfg] no config.json");
     return false;
