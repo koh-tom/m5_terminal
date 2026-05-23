@@ -59,6 +59,29 @@ int todayYmd() {
   return (t.tm_year + 1900) * 10000 + (t.tm_mon + 1) * 100 + t.tm_mday;
 }
 
+static struct tm ymdToTm(int ymd) {
+  struct tm t = {};
+  t.tm_year = ymd / 10000 - 1900;
+  t.tm_mon = ymd / 100 % 100 - 1;
+  t.tm_mday = ymd % 100;
+  t.tm_hour = 12;
+  t.tm_isdst = -1;
+  return t;
+}
+
+int ymdAddDays(int ymd, int days) {
+  struct tm t = ymdToTm(ymd);
+  t.tm_mday += days;
+  mktime(&t);
+  return (t.tm_year + 1900) * 10000 + (t.tm_mon + 1) * 100 + t.tm_mday;
+}
+
+int ymdWeekday(int ymd) {
+  struct tm t = ymdToTm(ymd);
+  mktime(&t);
+  return t.tm_wday;
+}
+
 void fmtTime(time_t t, char* buf, size_t n) {
   struct tm tm;
   localtime_r(&t, &tm);

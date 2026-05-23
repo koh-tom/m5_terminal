@@ -9,6 +9,8 @@ bool timeValid();
 
 // 20261021 みたいな形 (時刻が未設定なら0)
 int todayYmd();
+int ymdAddDays(int ymd, int days);
+int ymdWeekday(int ymd);  // 0=日
 
 // "2026-10-21 09:30:00"
 void fmtTime(time_t t, char* buf, size_t n);

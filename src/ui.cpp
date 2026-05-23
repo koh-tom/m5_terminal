@@ -3,6 +3,7 @@
 #include <M5Unified.h>
 
 #include "focus.h"
+#include "timekeep.h"
 
 static constexpr uint16_t rgb(uint8_t r, uint8_t g, uint8_t b) {
   return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
@@ -26,7 +27,7 @@ static time_t lastNow = 0;
 static uint32_t lastRemainSec = 0;
 
 static const char* WDAY[] = {"日", "月", "火", "水", "木", "金", "土"};
-static const char* TABS[] = {"時計", "集中"};
+static const char* TABS[] = {"時計", "集中", "記録"};
 
 static void drawHeader(const struct tm& t) {
   canvas.fillRect(0, 0, W, UI_HEADER_H, C_PANEL);
@@ -116,6 +117,47 @@ static void drawFocus() {
   canvas.drawString(today, W / 2, 180);
 }
 
+static void drawStats() {
+  uint32_t week[7];
+  focusWeek(week);
+
+  uint32_t total = 0, maxSec = 3600;
+  for (uint32_t v : week) {
+    total += v;
+    if (v > maxSec) maxSec = v;
+  }
+
+  char buf[48];
+  canvas.setFont(&fonts::lgfxJapanGothicP_16);
+  canvas.setTextColor(C_TEXT);
+  canvas.setTextDatum(middle_left);
+  canvas.drawString("この7日間", 12, 40);
+  snprintf(buf, sizeof(buf), "合計 %.1fh / 平均 %.1fh", total / 3600.0f, total / 3600.0f / 7);
+  canvas.setTextDatum(middle_right);
+  canvas.drawString(buf, W - 12, 40);
+
+  const int top = 66, bottom = 170, bw = 28, gap = 14;
+  int x0 = (W - (bw * 7 + gap * 6)) / 2;
+  int today = todayYmd();
+  canvas.setTextDatum(bottom_center);
+  for (int i = 0; i < 7; i++) {
+    int x = x0 + i * (bw + gap);
+    int h = (int)((uint64_t)week[i] * (bottom - top) / maxSec);
+    canvas.fillRect(x, bottom - h, bw, h, i == 6 ? C_ACCENT : C_WORK);
+    canvas.drawFastHLine(x - 4, bottom, bw + 8, C_PANEL);
+
+    if (week[i] > 0) {
+      snprintf(buf, sizeof(buf), "%.1f", week[i] / 3600.0f);
+      canvas.setTextColor(C_DIM);
+      canvas.drawString(buf, x + bw / 2, bottom - h - 2);
+    }
+    if (today) {
+      canvas.setTextColor(i == 6 ? C_TEXT : C_DIM);
+      canvas.drawString(WDAY[ymdWeekday(ymdAddDays(today, i - 6))], x + bw / 2, bottom + 22);
+    }
+  }
+}
+
 static void draw(time_t now) {
   struct tm t;
   localtime_r(&now, &t);
@@ -125,6 +167,7 @@ static void draw(time_t now) {
   switch (screen) {
     case Screen::Clock: drawClock(t); break;
     case Screen::Focus: drawFocus(); break;
+    case Screen::Stats: drawStats(); break;
     default: break;
   }
   drawFooter("開始", "停止", "リセット");

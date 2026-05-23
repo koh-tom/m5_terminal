@@ -5,7 +5,7 @@ constexpr int UI_TAB_W = 56;
 constexpr int UI_FOOTER_H = 40;
 constexpr int UI_FOOTER_Y = 240 - UI_FOOTER_H;
 
-enum class Screen { Clock, Focus, Count };
+enum class Screen { Clock, Focus, Stats, Count };
 
 void uiBegin();
 void uiLoop();
