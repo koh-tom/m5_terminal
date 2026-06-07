@@ -82,6 +82,12 @@ int ymdWeekday(int ymd) {
   return t.tm_wday;
 }
 
+int ymdDiff(int from, int to) {
+  struct tm a = ymdToTm(from), b = ymdToTm(to);
+  double sec = difftime(mktime(&b), mktime(&a));
+  return (int)lround(sec / 86400.0);
+}
+
 void fmtTime(time_t t, char* buf, size_t n) {
   struct tm tm;
   localtime_r(&t, &tm);

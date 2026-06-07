@@ -11,6 +11,7 @@ bool timeValid();
 int todayYmd();
 int ymdAddDays(int ymd, int days);
 int ymdWeekday(int ymd);  // 0=日
+int ymdDiff(int from, int to);
 
 // "2026-10-21 09:30:00"
 void fmtTime(time_t t, char* buf, size_t n);

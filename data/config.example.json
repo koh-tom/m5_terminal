@@ -4,5 +4,8 @@
   ],
   "tz": "JST-9",
   "ntp": "ntp.nict.jp",
-  "pomodoro": { "work": 50, "break": 10 }
+  "pomodoro": { "work": 50, "break": 10 },
+  "deadlines": [
+    { "title": "論文締切", "date": "2026-10-27" }
+  ]
 }

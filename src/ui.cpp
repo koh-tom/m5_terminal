@@ -2,6 +2,7 @@
 
 #include <M5Unified.h>
 
+#include "config.h"
 #include "focus.h"
 #include "timekeep.h"
 
@@ -16,6 +17,7 @@ static constexpr uint16_t C_DIM = rgb(130, 136, 150);
 static constexpr uint16_t C_WORK = rgb(235, 80, 70);
 static constexpr uint16_t C_BREAK = rgb(70, 190, 120);
 static constexpr uint16_t C_ACCENT = rgb(90, 160, 255);
+static constexpr uint16_t C_WARN = rgb(245, 170, 50);
 
 static constexpr int W = 320;
 static constexpr int FOOTER_Y = UI_FOOTER_Y;
@@ -62,19 +64,77 @@ static void drawFooter(const char* a, const char* b, const char* c) {
   }
 }
 
-static void drawClock(const struct tm& t) {
-  canvas.setTextColor(C_TEXT);
-  canvas.setTextDatum(middle_center);
+// 幅に収まらなければ後ろを削って…を付ける
+static void drawFit(const char* str, int x, int y, int maxW) {
+  if (canvas.textWidth(str) <= maxW) {
+    canvas.drawString(str, x, y);
+    return;
+  }
+  char buf[64];
+  strlcpy(buf, str, sizeof(buf));
+  size_t len = strlen(buf);
+  while (len > 0) {
+    do { len--; } while (len > 0 && (buf[len] & 0xC0) == 0x80);
+    strcpy(buf + len, "…");
+    if (canvas.textWidth(buf) <= maxW) break;
+  }
+  canvas.drawString(buf, x, y);
+}
+
+// 一番近い締切
+static const Deadline* nextDeadline(int today, int* days) {
+  const Deadline* best = nullptr;
+  for (int i = 0; i < cfg.deadlineCount; i++) {
+    int d = ymdDiff(today, cfg.deadlines[i].ymd);
+    if (d < 0) continue;
+    if (!best || d < *days) {
+      best = &cfg.deadlines[i];
+      *days = d;
+    }
+  }
+  return best;
+}
+
+static void drawDeadline(int today) {
+  int days = 0;
+  const Deadline* dl = today ? nextDeadline(today, &days) : nullptr;
+  if (!dl) return;
+
+  const int x = 206, y = 32, w = 106, h = 84;
+  uint16_t color = days <= 3 ? C_WORK : days <= 7 ? C_WARN : C_ACCENT;
+  canvas.fillRoundRect(x, y, w, h, 8, C_PANEL);
+  canvas.fillRect(x, y + 8, 4, h - 16, color);
 
   char buf[16];
+  if (days == 0) {
+    strcpy(buf, "D-DAY");
+  } else {
+    snprintf(buf, sizeof(buf), "D-%d", days);
+  }
+  canvas.setTextDatum(middle_center);
+  canvas.setTextColor(color);
+  canvas.setFont(days == 0 || days >= 100 ? &fonts::DejaVu24 : &fonts::DejaVu40);
+  canvas.drawString(buf, x + w / 2 + 2, y + 32);
+
+  canvas.setFont(&fonts::lgfxJapanGothicP_16);
+  canvas.setTextColor(C_TEXT);
+  drawFit(dl->title, x + w / 2 + 2, y + 66, w - 12);
+}
+
+static void drawClock(const struct tm& t) {
+  char buf[16];
   snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
-  canvas.setFont(&fonts::DejaVu72);
-  canvas.drawString(buf, W / 2, 86);
+  canvas.setTextDatum(middle_left);
+  canvas.setTextColor(C_TEXT);
+  canvas.setFont(&fonts::DejaVu56);
+  canvas.drawString(buf, 10, 64);
 
   char date[40];
   snprintf(date, sizeof(date), "%d月%d日 (%s)", t.tm_mon + 1, t.tm_mday, WDAY[t.tm_wday]);
-  canvas.setFont(&fonts::lgfxJapanGothicP_24);
-  canvas.drawString(date, W / 2, 152);
+  canvas.setFont(&fonts::lgfxJapanGothicP_20);
+  canvas.drawString(date, 14, 106);
+
+  drawDeadline(todayYmd());
 }
 
 static void drawFocus() {

@@ -2,10 +2,17 @@
 #include <Arduino.h>
 
 #define MAX_WIFI 3
+#define MAX_DEADLINES 4
+#define TITLE_LEN 48
 
 struct WifiCred {
   char ssid[33];
   char pass[65];
+};
+
+struct Deadline {
+  int ymd;
+  char title[TITLE_LEN];
 };
 
 struct Config {
@@ -16,6 +23,9 @@ struct Config {
 
   int workMin = 50;
   int breakMin = 10;
+
+  Deadline deadlines[MAX_DEADLINES];
+  int deadlineCount = 0;
 };
 
 extern Config cfg;
