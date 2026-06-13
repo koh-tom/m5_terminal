@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "focus.h"
+#include "schedule.h"
 #include "timekeep.h"
 
 static constexpr uint16_t rgb(uint8_t r, uint8_t g, uint8_t b) {
@@ -121,7 +122,89 @@ static void drawDeadline(int today) {
   drawFit(dl->title, x + w / 2 + 2, y + 66, w - 12);
 }
 
-static void drawClock(const struct tm& t) {
+static void fmtHm(char* buf, size_t n, int minutes) {
+  snprintf(buf, n, "%d:%02d", minutes / 60, minutes % 60);
+}
+
+static void drawSchedule(time_t now, int today) {
+  const int top = 124, rowH = 24, rows = 3;
+  canvas.drawFastHLine(10, top - 4, W - 20, C_PANEL);
+  canvas.setFont(&fonts::lgfxJapanGothicP_16);
+  if (!today) return;
+
+  const Item* list[MAX_ITEMS];
+  int n = scheduleOfDay(today, list, MAX_ITEMS);
+
+  int mtgDay = 0;
+  const Item* mtg = nextMeeting(now, &mtgDay);
+
+  // 終わった予定は飛ばして、なるべく先のを見せる
+  int first = 0;
+  while (first < n && itemEnd(list[first], today) <= now) first++;
+  if (n - first < rows) first = max(0, n - rows);
+
+  int y = top + rowH / 2;
+  if (n == 0) {
+    canvas.setTextDatum(middle_left);
+    canvas.setTextColor(C_DIM);
+    canvas.drawString("今日の予定なし", 14, y);
+    y += rowH;
+  }
+  for (int i = first; i < n && i < first + rows; i++) {
+    const Item* it = list[i];
+    time_t st = itemStart(it, today), en = itemEnd(it, today);
+    bool done = en <= now;
+    bool active = st <= now && now < en;
+    bool isNext = it == mtg && mtgDay == today;
+
+    char hm[8];
+    fmtHm(hm, sizeof(hm), it->start);
+    canvas.setTextDatum(middle_left);
+    canvas.setTextColor(done ? C_DIM : isNext ? C_ACCENT : C_TEXT);
+    canvas.drawString(hm, 14, y);
+
+    char right[24] = "";
+    uint16_t rc = C_DIM;
+    if (active) {
+      strcpy(right, "進行中");
+      rc = C_BREAK;
+    } else if (isNext) {
+      int mins = (int)((st - now + 59) / 60);
+      if (mins >= 60) {
+        snprintf(right, sizeof(right), "あと%d時間%d分", mins / 60, mins % 60);
+      } else {
+        snprintf(right, sizeof(right), "あと%d分", mins);
+      }
+      rc = C_ACCENT;
+    }
+    int rw = right[0] ? canvas.textWidth(right) + 8 : 0;
+    drawFit(it->title, 64, y, W - 64 - 12 - rw);
+    if (right[0]) {
+      canvas.setTextDatum(middle_right);
+      canvas.setTextColor(rc);
+      canvas.drawString(right, W - 12, y);
+    }
+    y += rowH;
+  }
+
+  // 次のMTGが今日じゃなければ最後に出す
+  if (mtg && mtgDay != today && y < UI_FOOTER_Y - 4) {
+    char buf[96], hm[8];
+    fmtHm(hm, sizeof(hm), mtg->start);
+    int d = ymdDiff(today, mtgDay);
+    if (d == 1) {
+      snprintf(buf, sizeof(buf), "次: 明日 %s %s", hm, mtg->title);
+    } else {
+      snprintf(buf, sizeof(buf), "次: %d/%d(%s) %s %s", mtgDay / 100 % 100, mtgDay % 100,
+               WDAY[ymdWeekday(mtgDay)], hm, mtg->title);
+    }
+    canvas.setTextDatum(middle_left);
+    canvas.setTextColor(C_ACCENT);
+    drawFit(buf, 14, y, W - 26);
+  }
+}
+
+static void drawClock(time_t now, const struct tm& t) {
   char buf[16];
   snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
   canvas.setTextDatum(middle_left);
@@ -134,7 +217,9 @@ static void drawClock(const struct tm& t) {
   canvas.setFont(&fonts::lgfxJapanGothicP_20);
   canvas.drawString(date, 14, 106);
 
-  drawDeadline(todayYmd());
+  int today = todayYmd();
+  drawDeadline(today);
+  drawSchedule(now, today);
 }
 
 static void drawFocus() {
@@ -225,7 +310,7 @@ static void draw(time_t now) {
   canvas.fillScreen(C_BG);
   drawHeader(t);
   switch (screen) {
-    case Screen::Clock: drawClock(t); break;
+    case Screen::Clock: drawClock(now, t); break;
     case Screen::Focus: drawFocus(); break;
     case Screen::Stats: drawStats(); break;
     default: break;
