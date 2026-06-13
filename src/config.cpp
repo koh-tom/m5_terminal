@@ -38,6 +38,55 @@ static int parseYmd(const char* s) {
   return y * 10000 + m * 100 + d;
 }
 
+// "13:30" -> 810
+static int parseHm(const char* s) {
+  int h, m;
+  char tail;
+  if (!s || sscanf(s, "%2d:%2d%c", &h, &m, &tail) != 2) return -1;
+  if (h < 0 || h > 23 || m < 0 || m > 59) return -1;
+  return h * 60 + m;
+}
+
+static int dowIndex(const char* s) {
+  static const char* en[] = {"sun", "mon", "tue", "wed", "thu", "fri", "sat"};
+  static const char* ja[] = {"日", "月", "火", "水", "木", "金", "土"};
+  for (int i = 0; i < 7; i++) {
+    if (strcasecmp(s, en[i]) == 0 || strcmp(s, ja[i]) == 0) return i;
+  }
+  return -1;
+}
+
+// "mon,wed" でも ["mon","wed"] でもいい
+static uint8_t parseDows(JsonVariantConst v) {
+  uint8_t bits = 0;
+  if (v.is<JsonArrayConst>()) {
+    for (JsonVariantConst e : v.as<JsonArrayConst>()) {
+      int i = e.is<const char*>() ? dowIndex(e.as<const char*>()) : -1;
+      if (i >= 0) bits |= 1 << i;
+    }
+  } else if (v.is<const char*>()) {
+    char buf[64];
+    strlcpy(buf, v.as<const char*>(), sizeof(buf));
+    char* save = nullptr;
+    for (char* tok = strtok_r(buf, ", ", &save); tok; tok = strtok_r(nullptr, ", ", &save)) {
+      int i = dowIndex(tok);
+      if (i >= 0) bits |= 1 << i;
+    }
+  }
+  return bits;
+}
+
+static bool parseItem(JsonObjectConst o, Item& it) {
+  it.ymd = o["date"].is<const char*>() ? parseYmd(o["date"]) : 0;
+  it.dows = it.ymd ? 0 : parseDows(o["dow"]);
+  it.start = parseHm(o["start"]);
+  it.end = parseHm(o["end"]);
+  it.mtg = o["mtg"] | false;
+  copyUtf8(it.title, sizeof(it.title), o["title"]);
+  if (it.end >= 0 && it.end <= it.start) it.end = -1;
+  return it.start >= 0 && (it.ymd || it.dows) && it.title[0];
+}
+
 bool loadConfig() {
   // SDにあればそっちを優先
   File f;
@@ -80,6 +129,16 @@ bool loadConfig() {
     if (dl.ymd) cfg.deadlineCount++;
   }
 
-  Serial.printf("[cfg] loaded, wifi=%d\n", cfg.wifiCount);
+  cfg.itemCount = 0;
+  for (JsonObjectConst o : doc["schedule"].as<JsonArrayConst>()) {
+    if (cfg.itemCount >= MAX_ITEMS) break;
+    if (parseItem(o, cfg.items[cfg.itemCount])) {
+      cfg.itemCount++;
+    } else {
+      Serial.println("[cfg] skip bad schedule item");
+    }
+  }
+
+  Serial.printf("[cfg] loaded, wifi=%d items=%d\n", cfg.wifiCount, cfg.itemCount);
   return true;
 }
