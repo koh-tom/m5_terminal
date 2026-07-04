@@ -373,6 +373,16 @@ void uiSetScreen(Screen s) {
 void uiShot() {
   int w = canvas.width(), h = canvas.height();
   Serial.printf("SHOT %d %d\n", w, h);
-  Serial.write((const uint8_t*)canvas.getBuffer(), w * h * 2);
+
+  // 一気に書くと取りこぼすので少しずつ
+  const uint8_t* p = (const uint8_t*)canvas.getBuffer();
+  size_t left = w * h * 2;
+  uint32_t t0 = millis();
+  while (left > 0 && millis() - t0 < 5000) {
+    size_t n = Serial.write(p, min(left, (size_t)512));
+    p += n;
+    left -= n;
+    if (n == 0) delay(1);
+  }
   Serial.flush();
 }
