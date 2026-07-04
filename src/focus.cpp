@@ -3,6 +3,7 @@
 #include <M5Unified.h>
 #include <Preferences.h>
 
+#include "beep.h"
 #include "config.h"
 #include "storage.h"
 #include "timekeep.h"
@@ -78,13 +79,6 @@ static void checkDay() {
 
 static uint32_t lengthOf(Phase p) {
   return (p == Phase::Work ? cfg.workMin : cfg.breakMin) * 60000UL;
-}
-
-static void beep(int n) {
-  for (int i = 0; i < n; i++) {
-    M5.Speaker.tone(2000, 120);
-    delay(200);
-  }
 }
 
 static void nextPhase() {

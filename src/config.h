@@ -33,6 +33,7 @@ struct Config {
 
   int workMin = 50;
   int breakMin = 10;
+  int remindMin = 5;
 
   Deadline deadlines[MAX_DEADLINES];
   int deadlineCount = 0;

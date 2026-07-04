@@ -119,6 +119,7 @@ bool loadConfig() {
   JsonObjectConst pomo = doc["pomodoro"];
   cfg.workMin = clampInt(pomo["work"], cfg.workMin, 1, 180);
   cfg.breakMin = clampInt(pomo["break"], cfg.breakMin, 1, 60);
+  cfg.remindMin = clampInt(doc["remind_min"], cfg.remindMin, 0, 60);
 
   cfg.deadlineCount = 0;
   for (JsonObjectConst d : doc["deadlines"].as<JsonArrayConst>()) {

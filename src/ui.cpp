@@ -32,9 +32,25 @@ static uint32_t lastRemainSec = 0;
 static const char* WDAY[] = {"日", "月", "火", "水", "木", "金", "土"};
 static const char* TABS[] = {"時計", "集中", "記録"};
 
+static void drawFit(const char* str, int x, int y, int maxW);
+
 static void drawHeader(const struct tm& t) {
-  canvas.fillRect(0, 0, W, UI_HEADER_H, C_PANEL);
   canvas.setFont(&fonts::lgfxJapanGothicP_16);
+
+  // MTG前はヘッダを通知に使う
+  int day = 0;
+  const Item* mtg = reminderActive(&day);
+  if (mtg) {
+    char buf[96];
+    snprintf(buf, sizeof(buf), "まもなく %d:%02d %s", mtg->start / 60, mtg->start % 60, mtg->title);
+    canvas.fillRect(0, 0, W, UI_HEADER_H, C_WARN);
+    canvas.setTextColor(C_BG);
+    canvas.setTextDatum(middle_left);
+    drawFit(buf, 8, UI_HEADER_H / 2, W - 16);
+    return;
+  }
+
+  canvas.fillRect(0, 0, W, UI_HEADER_H, C_PANEL);
   canvas.setTextDatum(middle_center);
   for (int i = 0; i < (int)Screen::Count; i++) {
     int x = i * UI_TAB_W;

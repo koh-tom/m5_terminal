@@ -4,6 +4,7 @@
 #include "console.h"
 #include "focus.h"
 #include "input.h"
+#include "schedule.h"
 #include "storage.h"
 #include "timekeep.h"
 #include "ui.h"
@@ -27,6 +28,7 @@ void loop() {
   timeLoop();
   inputLoop();
   focusLoop();
+  reminderLoop();
   uiLoop();
   delay(10);
 }

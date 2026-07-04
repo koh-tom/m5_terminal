@@ -1,5 +1,6 @@
 #include "schedule.h"
 
+#include "beep.h"
 #include "timekeep.h"
 
 static bool onDay(const Item& it, int ymd, int wday) {
@@ -58,4 +59,36 @@ const Item* nextMeeting(time_t now, int* ymd) {
     }
   }
   return nullptr;
+}
+
+static const Item* remindItem = nullptr;
+static int remindDay = 0;
+static time_t lastBeeped = 0;
+static time_t lastCheck = 0;
+
+void reminderLoop() {
+  time_t now = time(nullptr);
+  if (now == lastCheck) return;
+  lastCheck = now;
+
+  remindItem = nullptr;
+  if (cfg.remindMin <= 0) return;
+
+  int day = 0;
+  const Item* it = nextMeeting(now, &day);
+  if (!it) return;
+  time_t st = itemStart(it, day);
+  if (st - now > cfg.remindMin * 60) return;
+
+  remindItem = it;
+  remindDay = day;
+  if (lastBeeped != st) {
+    lastBeeped = st;
+    beep(2, 2600);
+  }
+}
+
+const Item* reminderActive(int* ymd) {
+  if (remindItem && ymd) *ymd = remindDay;
+  return remindItem;
 }

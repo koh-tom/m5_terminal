@@ -11,3 +11,9 @@ const Item* nextMeeting(time_t now, int* ymd);
 
 time_t itemStart(const Item* it, int ymd);
 time_t itemEnd(const Item* it, int ymd);
+
+// MTGの数分前に鳴らす
+void reminderLoop();
+
+// 通知中のMTG (無ければnullptr)
+const Item* reminderActive(int* ymd);
