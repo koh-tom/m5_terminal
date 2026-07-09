@@ -19,6 +19,7 @@ static constexpr uint16_t C_WORK = rgb(235, 80, 70);
 static constexpr uint16_t C_BREAK = rgb(70, 190, 120);
 static constexpr uint16_t C_ACCENT = rgb(90, 160, 255);
 static constexpr uint16_t C_WARN = rgb(245, 170, 50);
+static constexpr uint16_t C_BUSY = rgb(130, 32, 32);
 
 static constexpr int W = 320;
 static constexpr int FOOTER_Y = UI_FOOTER_Y;
@@ -50,17 +51,26 @@ static void drawHeader(const struct tm& t) {
     return;
   }
 
-  canvas.fillRect(0, 0, W, UI_HEADER_H, C_PANEL);
+  // 研究中は赤くして周りに分かるようにする
+  bool busy = focusPhase() == Phase::Work && focusState() == RunState::Running;
+  canvas.fillRect(0, 0, W, UI_HEADER_H, busy ? C_BUSY : C_PANEL);
   canvas.setTextDatum(middle_center);
   for (int i = 0; i < (int)Screen::Count; i++) {
     int x = i * UI_TAB_W;
     bool cur = i == (int)screen;
     canvas.setTextColor(cur ? C_TEXT : C_DIM);
     canvas.drawString(TABS[i], x + UI_TAB_W / 2, UI_HEADER_H / 2);
-    if (cur) canvas.fillRect(x + 10, UI_HEADER_H - 3, UI_TAB_W - 20, 3, C_ACCENT);
+    if (cur) canvas.fillRect(x + 10, UI_HEADER_H - 3, UI_TAB_W - 20, 3, busy ? C_TEXT : C_ACCENT);
   }
 
-  if (screen != Screen::Clock) {
+  if (busy) {
+    uint32_t sec = (focusRemainMs() + 999) / 1000;
+    char buf[32];
+    snprintf(buf, sizeof(buf), "研究中 %02lu:%02lu", (unsigned long)(sec / 60), (unsigned long)(sec % 60));
+    canvas.setTextDatum(middle_right);
+    canvas.setTextColor(C_TEXT);
+    canvas.drawString(buf, W - 6, UI_HEADER_H / 2);
+  } else if (screen != Screen::Clock) {
     char buf[8];
     snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
     canvas.setTextDatum(middle_right);
