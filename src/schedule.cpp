@@ -1,6 +1,7 @@
 #include "schedule.h"
 
 #include "beep.h"
+#include "focus.h"
 #include "timekeep.h"
 
 static bool onDay(const Item& it, int ymd, int wday) {
@@ -65,6 +66,7 @@ static const Item* remindItem = nullptr;
 static int remindDay = 0;
 static time_t lastBeeped = 0;
 static time_t lastCheck = 0;
+static time_t pendingStart = 0;
 
 void reminderLoop() {
   time_t now = time(nullptr);
@@ -72,6 +74,15 @@ void reminderLoop() {
   lastCheck = now;
 
   remindItem = nullptr;
+
+  // MTGが始まったらタイマーを止める
+  if (pendingStart && now >= pendingStart) {
+    pendingStart = 0;
+    if (cfg.pauseOnMtg && focusPhase() == Phase::Work && focusState() == RunState::Running) {
+      focusPause();
+    }
+  }
+
   if (cfg.remindMin <= 0) return;
 
   int day = 0;
@@ -82,6 +93,7 @@ void reminderLoop() {
 
   remindItem = it;
   remindDay = day;
+  pendingStart = st;
   if (lastBeeped != st) {
     lastBeeped = st;
     beep(2, 2600);

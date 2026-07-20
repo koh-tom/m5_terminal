@@ -120,6 +120,7 @@ bool loadConfig() {
   cfg.workMin = clampInt(pomo["work"], cfg.workMin, 1, 180);
   cfg.breakMin = clampInt(pomo["break"], cfg.breakMin, 1, 60);
   cfg.remindMin = clampInt(doc["remind_min"], cfg.remindMin, 0, 60);
+  cfg.pauseOnMtg = doc["pause_on_mtg"] | cfg.pauseOnMtg;
 
   cfg.deadlineCount = 0;
   for (JsonObjectConst d : doc["deadlines"].as<JsonArrayConst>()) {
