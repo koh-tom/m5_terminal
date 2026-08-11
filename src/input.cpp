@@ -3,6 +3,7 @@
 #include <M5Unified.h>
 
 #include "focus.h"
+#include "presence.h"
 #include "ui.h"
 
 void inputBegin() {
@@ -12,15 +13,33 @@ void inputBegin() {
   }
 }
 
+// 研究を始めたら自動で入室にする
+static void startFocus() {
+  if (focusPhase() == Phase::Work && presenceGet() != Presence::In) {
+    presenceSet(Presence::In);
+    uiToast("入室しました");
+  }
+  focusStart();
+}
+
 void inputButton(int idx, bool hold) {
   if (hold) {
     if (idx == 1) uiNextScreen();
     return;
   }
-  switch (idx) {
-    case 0: focusStart(); break;
-    case 1: focusPause(); break;
-    case 2: focusReset(); break;
+  if (uiScreen() == Screen::Presence) {
+    static const Presence ps[] = {Presence::In, Presence::Away, Presence::Out};
+    static const char* msg[] = {"入室しました", "外出します", "おつかれさまでした"};
+    if (presenceGet() != ps[idx]) {
+      presenceSet(ps[idx]);
+      uiToast(msg[idx]);
+    }
+  } else {
+    switch (idx) {
+      case 0: startFocus(); break;
+      case 1: focusPause(); break;
+      case 2: focusReset(); break;
+    }
   }
   uiDirty();
 }
@@ -32,7 +51,11 @@ void inputTap(int x, int y) {
     return;
   }
   if (uiScreen() == Screen::Focus) {
-    focusToggle();
+    if (focusState() == RunState::Running) {
+      focusPause();
+    } else {
+      startFocus();
+    }
     uiDirty();
   }
 }

@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "focus.h"
+#include "presence.h"
 #include "schedule.h"
 #include "timekeep.h"
 
@@ -31,7 +32,10 @@ static time_t lastNow = 0;
 static uint32_t lastRemainSec = 0;
 
 static const char* WDAY[] = {"日", "月", "火", "水", "木", "金", "土"};
-static const char* TABS[] = {"時計", "集中", "記録"};
+static const char* TABS[] = {"時計", "集中", "在室", "記録"};
+
+static char toast[64];
+static uint32_t toastUntil = 0;
 
 static void drawFit(const char* str, int x, int y, int maxW);
 
@@ -288,6 +292,69 @@ static void drawFocus() {
   canvas.drawString(today, W / 2, 180);
 }
 
+static void fmtDuration(char* buf, size_t n, uint32_t sec) {
+  uint32_t m = sec / 60;
+  if (m >= 60) {
+    snprintf(buf, n, "%lu時間%02lu分", (unsigned long)(m / 60), (unsigned long)(m % 60));
+  } else {
+    snprintf(buf, n, "%lu分", (unsigned long)m);
+  }
+}
+
+static void drawPresence() {
+  Presence p = presenceGet();
+  const char* label = p == Presence::In ? "在室" : p == Presence::Away ? "外出中" : "不在";
+  uint16_t color = p == Presence::In ? C_BREAK : p == Presence::Away ? C_WARN : C_DIM;
+
+  const int x = 20, y = 36, w = W - 40, h = 92;
+  canvas.fillRoundRect(x, y, w, h, 10, C_PANEL);
+  canvas.fillRect(x, y + 10, 5, h - 20, color);
+
+  canvas.setTextDatum(middle_center);
+  canvas.setTextColor(color);
+  canvas.setFont(&fonts::lgfxJapanGothicP_40);
+  canvas.drawString(label, W / 2, y + 36);
+
+  char buf[64];
+  canvas.setFont(&fonts::lgfxJapanGothicP_16);
+  canvas.setTextColor(C_TEXT);
+  if (p != Presence::Out && presenceSince()) {
+    struct tm t;
+    time_t since = presenceSince();
+    localtime_r(&since, &t);
+    snprintf(buf, sizeof(buf), "%d:%02d から", t.tm_hour, t.tm_min);
+    canvas.drawString(buf, W / 2, y + 72);
+  }
+
+  canvas.setTextColor(C_DIM);
+  if (presenceArrived()) {
+    struct tm t;
+    time_t arr = presenceArrived();
+    localtime_r(&arr, &t);
+    snprintf(buf, sizeof(buf), "今日の入室 %d:%02d", t.tm_hour, t.tm_min);
+    canvas.drawString(buf, W / 2, 152);
+  }
+  char dur[24];
+  fmtDuration(dur, sizeof(dur), presenceTodaySec());
+  snprintf(buf, sizeof(buf), "在室時間 %s", dur);
+  canvas.drawString(buf, W / 2, 176);
+}
+
+static void drawToast() {
+  if (!toast[0]) return;
+  if ((int32_t)(millis() - toastUntil) >= 0) {
+    toast[0] = '\0';
+    return;
+  }
+  canvas.setFont(&fonts::lgfxJapanGothicP_20);
+  int w = canvas.textWidth(toast) + 32, h = 44;
+  int x = (W - w) / 2, y = 80;
+  canvas.fillRoundRect(x, y, w, h, 10, C_TEXT);
+  canvas.setTextColor(C_BG);
+  canvas.setTextDatum(middle_center);
+  canvas.drawString(toast, W / 2, y + h / 2);
+}
+
 static void drawStats() {
   uint32_t week[7];
   focusWeek(week);
@@ -338,10 +405,16 @@ static void draw(time_t now) {
   switch (screen) {
     case Screen::Clock: drawClock(now, t); break;
     case Screen::Focus: drawFocus(); break;
+    case Screen::Presence: drawPresence(); break;
     case Screen::Stats: drawStats(); break;
     default: break;
   }
-  drawFooter("開始", "停止", "リセット");
+  if (screen == Screen::Presence) {
+    drawFooter("入室", "外出", "退室");
+  } else {
+    drawFooter("開始", "停止", "リセット");
+  }
+  drawToast();
   canvas.pushSprite(0, 0);
 }
 
@@ -353,6 +426,7 @@ void uiBegin() {
 void uiLoop() {
   time_t now = time(nullptr);
   uint32_t remainSec = (focusRemainMs() + 999) / 1000;
+  if (toast[0] && (int32_t)(millis() - toastUntil) >= 0) dirty = true;
   if (dirty || now != lastNow || remainSec != lastRemainSec) {
     dirty = false;
     lastNow = now;
@@ -362,6 +436,12 @@ void uiLoop() {
 }
 
 void uiDirty() { dirty = true; }
+
+void uiToast(const char* msg) {
+  strlcpy(toast, msg, sizeof(toast));
+  toastUntil = millis() + 1500;
+  dirty = true;
+}
 
 Screen uiScreen() { return screen; }
 
