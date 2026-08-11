@@ -4,6 +4,7 @@
 #include "console.h"
 #include "focus.h"
 #include "input.h"
+#include "presence.h"
 #include "schedule.h"
 #include "storage.h"
 #include "timekeep.h"
@@ -18,6 +19,7 @@ void setup() {
   loadConfig();
   timeBegin();
   focusBegin();
+  presenceBegin();
   inputBegin();
   uiBegin();
 }
@@ -28,6 +30,7 @@ void loop() {
   timeLoop();
   inputLoop();
   focusLoop();
+  presenceLoop();
   reminderLoop();
   uiLoop();
   delay(10);
