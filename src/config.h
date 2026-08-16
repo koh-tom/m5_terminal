@@ -36,6 +36,12 @@ struct Config {
   int remindMin = 5;
   bool pauseOnMtg = true;
 
+  // 画面の明るさ (夜は暗くする)
+  int brightDay = 120;
+  int brightNight = 20;
+  int nightFrom = 22 * 60;
+  int nightTo = 7 * 60;
+
   Deadline deadlines[MAX_DEADLINES];
   int deadlineCount = 0;
 

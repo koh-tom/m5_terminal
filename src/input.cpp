@@ -23,6 +23,7 @@ static void startFocus() {
 }
 
 void inputButton(int idx, bool hold) {
+  uiWake();
   if (hold) {
     if (idx == 1) uiNextScreen();
     return;
@@ -45,6 +46,7 @@ void inputButton(int idx, bool hold) {
 }
 
 void inputTap(int x, int y) {
+  uiWake();
   if (y >= UI_FOOTER_Y) return;
   if (y < UI_HEADER_H) {
     uiSetScreen((Screen)(x / UI_TAB_W));
@@ -61,6 +63,7 @@ void inputTap(int x, int y) {
 }
 
 void inputFlick(int dir) {
+  uiWake();
   uiMoveScreen(dir);
 }
 

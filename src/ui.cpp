@@ -36,6 +36,26 @@ static const char* TABS[] = {"時計", "集中", "在室", "記録"};
 
 static char toast[64];
 static uint32_t toastUntil = 0;
+static uint32_t wakeAt = 0;
+static int brightness = -1;
+
+static bool isNight(const struct tm& t) {
+  int m = t.tm_hour * 60 + t.tm_min;
+  if (cfg.nightFrom == cfg.nightTo) return false;
+  if (cfg.nightFrom < cfg.nightTo) return m >= cfg.nightFrom && m < cfg.nightTo;
+  return m >= cfg.nightFrom || m < cfg.nightTo;  // 日付またぎ
+}
+
+static void updateBrightness(time_t now) {
+  struct tm t;
+  localtime_r(&now, &t);
+  bool awake = wakeAt && millis() - wakeAt < 30000;
+  int b = (isNight(t) && !awake) ? cfg.brightNight : cfg.brightDay;
+  if (b != brightness) {
+    brightness = b;
+    M5.Display.setBrightness(b);
+  }
+}
 
 static void drawFit(const char* str, int x, int y, int maxW);
 
@@ -431,11 +451,17 @@ void uiLoop() {
     dirty = false;
     lastNow = now;
     lastRemainSec = remainSec;
+    updateBrightness(now);
     draw(now);
   }
 }
 
 void uiDirty() { dirty = true; }
+
+void uiWake() {
+  wakeAt = millis();
+  dirty = true;
+}
 
 void uiToast(const char* msg) {
   strlcpy(toast, msg, sizeof(toast));

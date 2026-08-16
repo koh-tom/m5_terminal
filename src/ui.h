@@ -10,6 +10,7 @@ enum class Screen { Clock, Focus, Presence, Stats, Count };
 void uiBegin();
 void uiLoop();
 void uiDirty();
+void uiWake();  // 夜でも少しの間明るくする
 
 Screen uiScreen();
 void uiSetScreen(Screen s);

@@ -122,6 +122,12 @@ bool loadConfig() {
   cfg.remindMin = clampInt(doc["remind_min"], cfg.remindMin, 0, 60);
   cfg.pauseOnMtg = doc["pause_on_mtg"] | cfg.pauseOnMtg;
 
+  JsonObjectConst br = doc["brightness"];
+  cfg.brightDay = clampInt(br["day"], cfg.brightDay, 1, 255);
+  cfg.brightNight = clampInt(br["night"], cfg.brightNight, 0, 255);
+  if (parseHm(br["night_from"]) >= 0) cfg.nightFrom = parseHm(br["night_from"]);
+  if (parseHm(br["night_to"]) >= 0) cfg.nightTo = parseHm(br["night_to"]);
+
   cfg.deadlineCount = 0;
   for (JsonObjectConst d : doc["deadlines"].as<JsonArrayConst>()) {
     if (cfg.deadlineCount >= MAX_DEADLINES) break;
