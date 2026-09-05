@@ -5,6 +5,7 @@
 #define MAX_DEADLINES 4
 #define MAX_ITEMS 32
 #define TITLE_LEN 48
+#define MAX_CONFIG_SIZE 16384
 
 struct WifiCred {
   char ssid[33];
@@ -52,3 +53,6 @@ struct Config {
 extern Config cfg;
 
 bool loadConfig();
+
+// 受け取ったjsonをチェックして保存し、読み直す
+bool saveConfig(const char* json, size_t len);

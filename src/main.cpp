@@ -11,6 +11,9 @@
 #include "ui.h"
 
 void setup() {
+  // config受信用に大きめにしておく (begin前に呼ぶ)
+  Serial.setRxBufferSize(4096);
+
   auto mc = M5.config();
   mc.serial_baudrate = 115200;
   M5.begin(mc);

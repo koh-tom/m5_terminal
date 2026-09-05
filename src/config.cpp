@@ -7,6 +7,9 @@
 
 Config cfg;
 
+static const char* SD_PATH = "/labterm/config.json";
+static const char* FLASH_PATH = "/config.json";
+
 static int clampInt(JsonVariantConst v, int def, int lo, int hi) {
   if (!v.is<int>()) return def;
   return constrain(v.as<int>(), lo, hi);
@@ -90,10 +93,15 @@ static bool parseItem(JsonObjectConst o, Item& it) {
 bool loadConfig() {
   // SDにあればそっちを優先
   File f;
-  if (sdReady()) f = SD.open("/labterm/config.json", FILE_READ);
-  if (!f) f = LittleFS.open("/config.json", FILE_READ);
+  if (sdReady()) f = SD.open(SD_PATH, FILE_READ);
+  if (!f) f = LittleFS.open(FLASH_PATH, FILE_READ);
   if (!f) {
     Serial.println("[cfg] no config.json");
+    return false;
+  }
+  if (f.size() > MAX_CONFIG_SIZE) {
+    Serial.println("[cfg] config.json too large");
+    f.close();
     return false;
   }
 
@@ -149,4 +157,29 @@ bool loadConfig() {
 
   Serial.printf("[cfg] loaded, wifi=%d items=%d\n", cfg.wifiCount, cfg.itemCount);
   return true;
+}
+
+bool saveConfig(const char* json, size_t len) {
+  if (len == 0 || len > MAX_CONFIG_SIZE) return false;
+  JsonDocument doc;
+  if (deserializeJson(doc, json, len)) return false;
+  if (!doc.is<JsonObject>()) return false;
+
+  // 一旦別名で書いてから置き換える
+  fs::FS& fs = sdReady() ? (fs::FS&)SD : (fs::FS&)LittleFS;
+  const char* path = sdReady() ? SD_PATH : FLASH_PATH;
+  String tmp = String(path) + ".tmp";
+  File f = fs.open(tmp, FILE_WRITE);
+  if (!f) return false;
+  size_t written = f.write((const uint8_t*)json, len);
+  f.close();
+  if (written != len) {
+    fs.remove(tmp);
+    return false;
+  }
+  fs.remove(path);
+  if (!fs.rename(tmp, path)) return false;
+
+  Serial.println("[cfg] saved");
+  return loadConfig();
 }

@@ -94,6 +94,10 @@ void timeLoop() {
 
 time_t lastNtpSync() { return lastSync; }
 
+void timeResync() {
+  if (net == Net::Off) nextSyncAt = millis();
+}
+
 void timeSet(time_t t) {
   struct timeval tv = {t, 0};
   settimeofday(&tv, nullptr);

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "config.h"
 #include "focus.h"
 #include "input.h"
 #include "storage.h"
@@ -50,11 +51,52 @@ static void catFile(const char* path) {
   Serial.println("OK");
 }
 
+// "config <バイト数>" の後にjson本体が来る
+static void receiveConfig(const char* arg) {
+  char* end;
+  long n = strtol(arg, &end, 10);
+  if (*end != '\0' || n <= 0 || n > MAX_CONFIG_SIZE) {
+    Serial.println("ERR bad size");
+    return;
+  }
+  char* buf = (char*)malloc(n);
+  if (!buf) {
+    Serial.println("ERR no memory");
+    return;
+  }
+
+  Serial.println("READY");
+  size_t got = 0;
+  uint32_t t0 = millis();
+  while (got < (size_t)n && millis() - t0 < 5000) {
+    int avail = Serial.available();
+    if (avail > 0) {
+      got += Serial.readBytes(buf + got, min((size_t)avail, (size_t)n - got));
+    } else {
+      delay(1);
+    }
+  }
+
+  bool ok = got == (size_t)n && saveConfig(buf, n);
+  memset(buf, 0, n);  // パスワード入りなので消しておく
+  free(buf);
+
+  if (ok) {
+    timeResync();
+    uiDirty();
+    Serial.println("OK");
+  } else {
+    Serial.println(got == (size_t)n ? "ERR invalid config" : "ERR timeout");
+  }
+}
+
 static void handle(const char* s) {
   if (strcmp(s, "status") == 0) {
     printStatus();
   } else if (strncmp(s, "cat ", 4) == 0) {
     catFile(s + 4);
+  } else if (strncmp(s, "config ", 7) == 0) {
+    receiveConfig(s + 7);
   } else if (strncmp(s, "time ", 5) == 0) {
     char* end;
     long long v = strtoll(s + 5, &end, 10);
