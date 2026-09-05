@@ -1,7 +1,6 @@
 #include "console.h"
 
 #include <Arduino.h>
-#include <WiFi.h>
 
 #include "focus.h"
 #include "input.h"
@@ -18,7 +17,12 @@ static void printStatus() {
   fmtTime(time(nullptr), buf, sizeof(buf));
   Serial.printf("time  %s%s\n", buf, timeValid() ? "" : " (invalid)");
   Serial.printf("sd    %s\n", sdReady() ? "ok" : "none");
-  Serial.printf("wifi  %s\n", WiFi.isConnected() ? WiFi.SSID().c_str() : "-");
+  if (lastNtpSync()) {
+    fmtTime(lastNtpSync(), buf, sizeof(buf));
+    Serial.printf("ntp   %s\n", buf);
+  } else {
+    Serial.println("ntp   -");
+  }
   Serial.printf("focus %lus / %d\n", (unsigned long)focusTodaySec(), focusTodayCount());
   Serial.printf("heap  %u\n", (unsigned)ESP.getFreeHeap());
   Serial.println("OK");

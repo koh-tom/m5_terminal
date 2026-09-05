@@ -6,6 +6,14 @@
 
 #include "config.h"
 
+// wifiは時刻合わせの時だけつなぐ
+enum class Net { Off, Connecting, Syncing };
+
+static Net net = Net::Off;
+static int apIndex = 0;
+static uint32_t stepAt = 0;
+static uint32_t nextSyncAt = 0;
+static time_t lastSync = 0;
 static volatile bool ntpSynced = false;
 
 static void onNtpSync(struct timeval*) { ntpSynced = true; }
@@ -18,6 +26,25 @@ static void saveRtc() {
   M5.Rtc.setDateTime(&t);
 }
 
+static void connect() {
+  Serial.printf("[wifi] connecting to %s\n", cfg.wifi[apIndex].ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.setHostname("labterm");
+  WiFi.begin(cfg.wifi[apIndex].ssid, cfg.wifi[apIndex].pass);
+  net = Net::Connecting;
+  stepAt = millis();
+}
+
+static void stop(bool ok) {
+  sntp_stop();
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+  net = Net::Off;
+  // 成功したら6時間後、失敗したら10分後にまた試す
+  nextSyncAt = millis() + (ok ? 6 * 3600 : 600) * 1000UL;
+  Serial.printf("[wifi] off (%s)\n", ok ? "synced" : "failed");
+}
+
 void timeBegin() {
   // setSystemTimeFromRtc()の中でTZが壊れるので先に呼ぶ
   if (M5.Rtc.isEnabled()) {
@@ -25,21 +52,47 @@ void timeBegin() {
   }
   setenv("TZ", cfg.tz, 1);
   tzset();
-
-  if (cfg.wifiCount == 0) return;
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(cfg.wifi[0].ssid, cfg.wifi[0].pass);
   sntp_set_time_sync_notification_cb(onNtpSync);
-  configTzTime(cfg.tz, cfg.ntp);
 }
 
 void timeLoop() {
-  if (ntpSynced) {
-    ntpSynced = false;
-    saveRtc();
-    Serial.println("[ntp] synced");
+  switch (net) {
+    case Net::Off:
+      if (cfg.wifiCount > 0 && (int32_t)(millis() - nextSyncAt) >= 0) {
+        apIndex = 0;
+        connect();
+      }
+      break;
+
+    case Net::Connecting:
+      if (WiFi.status() == WL_CONNECTED) {
+        configTzTime(cfg.tz, cfg.ntp);
+        net = Net::Syncing;
+        stepAt = millis();
+      } else if (millis() - stepAt > 15000) {
+        WiFi.disconnect();
+        if (++apIndex < cfg.wifiCount) {
+          connect();
+        } else {
+          stop(false);
+        }
+      }
+      break;
+
+    case Net::Syncing:
+      if (ntpSynced) {
+        ntpSynced = false;
+        saveRtc();
+        lastSync = time(nullptr);
+        stop(true);
+      } else if (millis() - stepAt > 20000) {
+        stop(false);
+      }
+      break;
   }
 }
+
+time_t lastNtpSync() { return lastSync; }
 
 void timeSet(time_t t) {
   struct timeval tv = {t, 0};
