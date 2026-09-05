@@ -28,9 +28,15 @@ static void printStatus() {
   Serial.println("OK");
 }
 
-// /labterm/ の下だけ読めるようにする
+// ログ(csv)だけ読めるようにする。config.jsonはパスワードが入ってるので不可
+static bool isLogPath(const char* path) {
+  size_t n = strlen(path);
+  return strncmp(path, "/labterm/", 9) == 0 && !strstr(path, "..") && n > 4 &&
+         strcmp(path + n - 4, ".csv") == 0;
+}
+
 static void catFile(const char* path) {
-  if (strncmp(path, "/labterm/", 9) != 0 || strstr(path, "..")) {
+  if (!isLogPath(path)) {
     Serial.println("ERR bad path");
     return;
   }
