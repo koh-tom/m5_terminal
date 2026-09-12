@@ -255,6 +255,17 @@ static void drawSchedule(time_t now, int today) {
 }
 
 static void drawClock(time_t now, const struct tm& t) {
+  if (!timeValid()) {
+    canvas.setTextDatum(middle_center);
+    canvas.setFont(&fonts::lgfxJapanGothicP_24);
+    canvas.setTextColor(C_WARN);
+    canvas.drawString("時刻が未設定です", W / 2, 90);
+    canvas.setFont(&fonts::lgfxJapanGothicP_16);
+    canvas.setTextColor(C_DIM);
+    canvas.drawString("wifiを設定するか settime.py を実行", W / 2, 130);
+    return;
+  }
+
   char buf[16];
   snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
   canvas.setTextDatum(middle_left);
