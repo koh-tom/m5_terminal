@@ -415,7 +415,7 @@ static void drawStats() {
     canvas.fillRect(x, bottom - h, bw, h, i == 6 ? C_ACCENT : C_WORK);
     canvas.drawFastHLine(x - 4, bottom, bw + 8, C_PANEL);
 
-    if (week[i] > 0) {
+    if (week[i] >= 180) {
       snprintf(buf, sizeof(buf), "%.1f", week[i] / 3600.0f);
       canvas.setTextColor(C_DIM);
       canvas.drawString(buf, x + bw / 2, bottom - h - 2);
