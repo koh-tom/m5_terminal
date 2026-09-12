@@ -122,7 +122,7 @@ static void drawFit(const char* str, int x, int y, int maxW) {
     return;
   }
   char buf[64];
-  strlcpy(buf, str, sizeof(buf));
+  strlcpy(buf, str, sizeof(buf) - 3);  // …の分をあけておく
   size_t len = strlen(buf);
   while (len > 0) {
     do { len--; } while (len > 0 && (buf[len] & 0xC0) == 0x80);
