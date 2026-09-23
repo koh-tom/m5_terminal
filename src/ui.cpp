@@ -450,8 +450,13 @@ static void draw(time_t now) {
 }
 
 void uiBegin() {
-  canvas.setColorDepth(16);
-  canvas.createSprite(M5.Display.width(), M5.Display.height());
+  // PSRAMが無い機種(Basic)はメモリが足りないので8bitにする
+  bool psram = psramFound();
+  canvas.setPsram(psram);
+  canvas.setColorDepth(psram ? 16 : 8);
+  if (!canvas.createSprite(M5.Display.width(), M5.Display.height())) {
+    Serial.println("[ui] createSprite failed");
+  }
 }
 
 void uiLoop() {
@@ -501,15 +506,23 @@ void uiShot() {
   int w = canvas.width(), h = canvas.height();
   Serial.printf("SHOT %d %d\n", w, h);
 
-  // 一気に書くと取りこぼすので少しずつ
-  const uint8_t* p = (const uint8_t*)canvas.getBuffer();
-  size_t left = w * h * 2;
-  uint32_t t0 = millis();
-  while (left > 0 && millis() - t0 < 5000) {
-    size_t n = Serial.write(p, min(left, (size_t)512));
-    p += n;
-    left -= n;
-    if (n == 0) delay(1);
+  // 1行ずつRGB565に直して送る (一気に書くと取りこぼす)
+  uint8_t row[320 * 2];
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w && x < 320; x++) {
+      uint16_t c = canvas.readPixel(x, y);
+      row[x * 2] = c >> 8;
+      row[x * 2 + 1] = c & 0xFF;
+    }
+    const uint8_t* p = row;
+    size_t left = w * 2;
+    uint32_t t0 = millis();
+    while (left > 0 && millis() - t0 < 1000) {
+      size_t n = Serial.write(p, left);
+      p += n;
+      left -= n;
+      if (n == 0) delay(1);
+    }
   }
   Serial.flush();
 }
