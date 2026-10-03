@@ -1,0 +1,87 @@
+# labterm
+
+M5Stack CoreS3 を研究室の机に置くチェックイン端末にしたもの。
+時計 / 予定 / 締切カウントダウン / ポモドーロ / 在室ログ。
+
+Core2 と Basic でも動く (Basic は物理ボタン、RTC が無いので wifi 必須)。
+
+## 画面
+
+| 画面 | 内容 |
+| --- | --- |
+| 時計 | 時刻、今日の予定、次のMTGまでの時間、一番近い締切 (D-n) |
+| 集中 | 研究 50分 / 休憩 10分 のタイマー。今日の合計時間と回数 |
+| 在室 | 入室 / 外出 / 退室 |
+| 記録 | 直近7日の研究時間グラフ |
+
+- 下の3つ (Basic は A/B/C ボタン): 開始 / 停止 / リセット、在室画面では 入室 / 外出 / 退室
+- 画面切り替え: 上のタブをタップ、左右スワイプ、Bボタン長押し
+- 集中画面はタイマーの所をタップで開始/一時停止
+- 研究中はヘッダが赤くなる (話しかけないでのサイン)
+- MTG の5分前にヘッダがオレンジになって鳴る。始まったらタイマーは自動で一時停止
+- 研究を開始すると自動で入室扱いになる
+- 夜 (22:00-7:00) は画面を暗くする。触ると30秒だけ明るくなる
+
+## 使い方
+
+```sh
+cp data/config.example.json data/config.json   # 中身を編集
+pio run -t upload
+uv run tools/push_config.py data/config.json
+uv run tools/settime.py   # wifi が無いとき。RTC に書くので一回でいい
+```
+
+SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先)。
+`pio run -t uploadfs` でも書けるが、内蔵flashのログが消えるので push_config.py の方がいい。
+
+### config.json
+
+| キー | 説明 |
+| --- | --- |
+| `wifi` | `[{ "ssid", "pass" }]` 3つまで。時刻合わせの時だけつなぐ |
+| `tz`, `ntp` | タイムゾーン (POSIX形式) と NTP サーバ |
+| `pomodoro` | `{ "work": 50, "break": 10 }` (分) |
+| `remind_min` | MTG の何分前に知らせるか。0 で無効 |
+| `pause_on_mtg` | MTG 開始でタイマーを止めるか |
+| `brightness` | `{ "day", "night", "night_from", "night_to" }` |
+| `deadlines` | `[{ "title", "date": "2026-10-27" }]` |
+| `schedule` | 毎週: `{ "dow": "mon,wed", "start", "end", "title", "mtg" }`<br>単発: `{ "date": "2026-10-23", "start", ... }` |
+
+`mtg: true` の予定が「次のMTG」の対象になる。
+
+## ログ
+
+SD があれば SD、無ければ内蔵flash の `/labterm/` に csv で書く。
+
+- `focus.csv` — 研究した区間 (`start,end,sec,done`)
+- `daily.csv` — 日ごとの合計 (`date,sec,count`)
+- `presence.csv` — 入室/外出/退室 (`time,state`)
+
+USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
+
+## シリアルコマンド
+
+| コマンド | |
+| --- | --- |
+| `status` | 時刻、SD、NTP、今日の合計など |
+| `time <unix秒>` | 時刻合わせ (settime.py が使う) |
+| `config <bytes>` | config.json 受信 (push_config.py が使う) |
+| `cat <path>` | ログを読む (`/labterm/*.csv` のみ) |
+| `shot` | 画面キャプチャ (`uv run tools/shot.py`) |
+| `btn a` / `hold b` / `tap x y` | 操作のテスト用 |
+
+## セキュリティ
+
+- `data/config.json` は wifi のパスワードが入るので git に入れない (.gitignore 済み)
+- 端末側では平文で保存される。端末/SDカードを持ち出されたら読めるので、研究室の共用wifiのパスワードを入れる場合は注意
+- シリアルの `cat` は csv しか読めないようにしてある (config.json は読めない)
+- wifi は NTP の時だけつないですぐ切る。サーバ等は立てていない
+
+## TODO
+
+- Google カレンダーの iCal URL から予定を取る
+- 近接センサー (CoreS3 の LTR-553) で人が来たら画面を明るくする
+- 退室し忘れたら朝4時に自動で退室
+- Slack / Discord に入退室を通知
+- CO2 センサー (Unit CO2) をつないで換気アラート
+- 複数人の在室ボード (RFID Unit でカードをかざす)
