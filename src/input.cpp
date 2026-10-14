@@ -15,8 +15,8 @@ void inputBegin() {
 
 // 研究を始めたら自動で入室にする
 static void startFocus() {
-  if (focusPhase() == Phase::Work && presenceGet() != Presence::In) {
-    presenceSet(Presence::In);
+  if (focusPhase() == Phase::Work && presenceGet() != Presence::In &&
+      presenceSet(Presence::In)) {
     uiToast("入室しました");
   }
   focusStart();
@@ -32,8 +32,7 @@ void inputButton(int idx, bool hold) {
     static const Presence ps[] = {Presence::In, Presence::Away, Presence::Out};
     static const char* msg[] = {"入室しました", "外出します", "おつかれさまでした"};
     if (presenceGet() != ps[idx]) {
-      presenceSet(ps[idx]);
-      uiToast(msg[idx]);
+      uiToast(presenceSet(ps[idx]) ? msg[idx] : "時刻が未設定です");
     }
   } else {
     switch (idx) {

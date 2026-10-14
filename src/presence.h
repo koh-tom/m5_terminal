@@ -8,7 +8,7 @@ enum class Presence : uint8_t { Out, In, Away };
 void presenceBegin();
 void presenceLoop();
 
-void presenceSet(Presence p);
+bool presenceSet(Presence p);  // 時刻が未設定だと失敗する
 Presence presenceGet();
 time_t presenceSince();      // 今の状態になった時刻
 time_t presenceArrived();    // 今日最初に入室した時刻 (無ければ0)

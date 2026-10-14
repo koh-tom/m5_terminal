@@ -56,8 +56,9 @@ void presenceLoop() {
   checkDay();
 }
 
-void presenceSet(Presence p) {
-  if (p == state || !timeValid()) return;
+bool presenceSet(Presence p) {
+  if (p == state) return true;
+  if (!timeValid()) return false;
   time_t now = time(nullptr);
   if (state == Presence::In) inSec += now - since;
   if (p == Presence::In && arrived == 0) arrived = now;
@@ -69,6 +70,7 @@ void presenceSet(Presence p) {
   fmtTime(now, ts, sizeof(ts));
   snprintf(line, sizeof(line), "%s,%s", ts, NAMES[(int)p]);
   logAppend("/labterm/presence.csv", line, "time,state");
+  return true;
 }
 
 Presence presenceGet() { return state; }
