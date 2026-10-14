@@ -496,7 +496,8 @@ void uiMoveScreen(int dir) {
 void uiNextScreen() { uiMoveScreen(1); }
 
 void uiSetScreen(Screen s) {
-  if (s >= Screen::Count) return;
+  int i = (int)s;
+  if (i < 0 || i >= (int)Screen::Count) return;
   screen = s;
   dirty = true;
 }
