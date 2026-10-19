@@ -129,6 +129,7 @@ bool loadConfig() {
   cfg.breakMin = clampInt(pomo["break"], cfg.breakMin, 1, 60);
   cfg.remindMin = clampInt(doc["remind_min"], cfg.remindMin, 0, 60);
   cfg.pauseOnMtg = doc["pause_on_mtg"] | cfg.pauseOnMtg;
+  cfg.volume = clampInt(doc["volume"], cfg.volume, 0, 255);
 
   JsonObjectConst br = doc["brightness"];
   cfg.brightDay = clampInt(br["day"], cfg.brightDay, 1, 255);

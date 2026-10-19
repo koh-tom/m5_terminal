@@ -36,6 +36,7 @@ struct Config {
   int breakMin = 10;
   int remindMin = 5;
   bool pauseOnMtg = true;
+  int volume = 128;  // 0で消音
 
   // 画面の明るさ (夜は暗くする)
   int brightDay = 120;

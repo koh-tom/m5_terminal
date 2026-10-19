@@ -43,6 +43,7 @@ SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先
 | `pomodoro` | `{ "work": 50, "break": 10 }` (分) |
 | `remind_min` | MTG の何分前に知らせるか。0 で無効 |
 | `pause_on_mtg` | MTG 開始でタイマーを止めるか |
+| `volume` | 0-255。0 で鳴らさない |
 | `brightness` | `{ "day", "night", "night_from", "night_to" }` |
 | `deadlines` | `[{ "title", "date": "2026-10-27" }]` |
 | `schedule` | 毎週: `{ "dow": "mon,wed", "start", "end", "title", "mtg" }`<br>単発: `{ "date": "2026-10-23", "start", ... }` |
