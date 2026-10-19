@@ -83,17 +83,15 @@ void reminderLoop() {
     }
   }
 
-  if (cfg.remindMin <= 0) return;
-
   int day = 0;
   const Item* it = nextMeeting(now, &day);
   if (!it) return;
   time_t st = itemStart(it, day);
-  if (st - now > cfg.remindMin * 60) return;
+  pendingStart = st;
+  if (cfg.remindMin <= 0 || st - now > cfg.remindMin * 60) return;
 
   remindItem = it;
   remindDay = day;
-  pendingStart = st;
   if (lastBeeped != st) {
     lastBeeped = st;
     beep(2, 2600);
