@@ -9,11 +9,22 @@ static bool onDay(const Item& it, int ymd, int wday) {
   return (it.dows >> wday) & 1;
 }
 
+static Item extItems[MAX_EXT_ITEMS];
+static int extCount = 0;
+
+void scheduleSetExternal(const Item* items, int n) {
+  extCount = min(n, MAX_EXT_ITEMS);
+  memcpy(extItems, items, sizeof(Item) * extCount);
+}
+
 int scheduleOfDay(int ymd, const Item** out, int max) {
   int wday = ymdWeekday(ymd);
   int n = 0;
   for (int i = 0; i < cfg.itemCount && n < max; i++) {
     if (onDay(cfg.items[i], ymd, wday)) out[n++] = &cfg.items[i];
+  }
+  for (int i = 0; i < extCount && n < max; i++) {
+    if (onDay(extItems[i], ymd, wday)) out[n++] = &extItems[i];
   }
   // 挿入ソート (数が少ないので)
   for (int i = 1; i < n; i++) {
