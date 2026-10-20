@@ -11,6 +11,9 @@
 #include "timekeep.h"
 #include "ui.h"
 
+// 大きいvlwフォントはグリフをスタックに展開するので広めにとる
+SET_LOOP_TASK_STACK_SIZE(32 * 1024);
+
 void setup() {
   // config受信用に大きめにしておく (begin前に呼ぶ)
   Serial.setRxBufferSize(4096);
