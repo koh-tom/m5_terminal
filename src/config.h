@@ -36,7 +36,7 @@ struct Config {
   int breakMin = 10;
   int remindMin = 5;
   bool pauseOnMtg = true;
-  int volume = 128;  // 0で消音
+  int volume = 0;  // 0で鳴らさない
 
   bool clockAnalog = false;
   bool focusEva = false;
