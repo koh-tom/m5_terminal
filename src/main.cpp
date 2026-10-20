@@ -3,6 +3,7 @@
 #include "config.h"
 #include "console.h"
 #include "focus.h"
+#include "fonts.h"
 #include "input.h"
 #include "presence.h"
 #include "schedule.h"
@@ -21,6 +22,7 @@ void setup() {
   storageBegin();
   loadConfig();
   timeBegin();
+  fontsBegin();
   focusBegin();
   presenceBegin();
   inputBegin();
