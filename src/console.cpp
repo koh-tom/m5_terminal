@@ -126,6 +126,14 @@ static void handle(const char* s) {
     }
     inputTap(x, y);
     Serial.println("OK");
+  } else if (strncmp(s, "press ", 6) == 0) {
+    int x, y;
+    if (sscanf(s + 6, "%d %d", &x, &y) != 2) {
+      Serial.println("ERR bad press");
+      return;
+    }
+    inputLongPress(x, y);
+    Serial.println("OK");
   } else {
     Serial.println("ERR unknown");
   }

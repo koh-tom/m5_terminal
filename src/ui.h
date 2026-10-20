@@ -1,11 +1,13 @@
 #pragma once
 
-constexpr int UI_HEADER_H = 24;
-constexpr int UI_TAB_W = 52;
-constexpr int UI_FOOTER_H = 40;
-constexpr int UI_FOOTER_Y = 240 - UI_FOOTER_H;
+constexpr int UI_W = 320;
+constexpr int UI_H = 240;
+constexpr int UI_HEADER_H = 28;
+constexpr int UI_TAB_W = 64;
+constexpr int UI_FOOTER_H = 44;
+constexpr int UI_FOOTER_Y = UI_H - UI_FOOTER_H;
 
-enum class Screen { Clock, Focus, Presence, Stats, Count };
+enum class Screen { Clock, Agenda, Focus, Presence, Stats, Count };
 
 void uiBegin();
 void uiLoop();
@@ -16,6 +18,12 @@ Screen uiScreen();
 void uiSetScreen(Screen s);
 void uiNextScreen();
 void uiMoveScreen(int dir);
+
+// 下のボタンがある画面か (集中と在室だけ)
+bool uiHasFooter();
+
+// 時計: デジタル/アナログ、集中: 普通/エヴァ
+void uiToggleStyle();
 
 // 少しの間だけ出すメッセージ
 void uiToast(const char* msg);

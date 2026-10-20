@@ -38,6 +38,9 @@ struct Config {
   bool pauseOnMtg = true;
   int volume = 128;  // 0で消音
 
+  bool clockAnalog = false;
+  bool focusEva = false;
+
   // 画面の明るさ (夜は暗くする)
   int brightDay = 120;
   int brightNight = 20;

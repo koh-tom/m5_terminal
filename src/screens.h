@@ -1,0 +1,24 @@
+#pragma once
+#include <time.h>
+
+// 1フレーム分の時刻
+struct Frame {
+  time_t now;
+  struct tm t;
+  int today;  // 0なら時刻未設定
+};
+
+void drawClock(const Frame& f, bool analog);
+void drawAgenda(const Frame& f);
+void drawFocus(const Frame& f);
+void drawFocusFooter();
+void drawEva(const Frame& f);
+void drawEvaFooter();
+void drawPresence(const Frame& f);
+void drawPresenceFooter();
+void drawStats(const Frame& f);
+
+// 時計と予定で使う
+struct Deadline;
+const Deadline* nearestDeadline(int today, int* days);
+uint16_t deadlineColor(int days);
