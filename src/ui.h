@@ -27,6 +27,11 @@ bool uiHasFooter();
 // 時計: デジタル/アナログ、集中: FocusStyleを順番に
 void uiToggleStyle();
 
+// QRカード (逆さまにした時)
+bool uiCardActive();
+void uiCardNext();
+void uiCardForce(bool on);  // IMUが無い機種やテスト用
+
 // 少しの間だけ出すメッセージ
 void uiToast(const char* msg);
 

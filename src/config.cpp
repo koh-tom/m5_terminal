@@ -163,6 +163,23 @@ bool loadConfig() {
     }
   }
 
+  // QRにするのはhttp(s)のリンクだけ
+  JsonObjectConst card = doc["card"];
+  copyUtf8(cfg.cardName, sizeof(cfg.cardName), card["name"]);
+  cfg.linkCount = 0;
+  for (JsonObjectConst l : card["links"].as<JsonArrayConst>()) {
+    if (cfg.linkCount >= MAX_LINKS) break;
+    const char* url = l["url"];
+    if (!url || strlen(url) >= sizeof(Link::url) ||
+        (strncmp(url, "https://", 8) != 0 && strncmp(url, "http://", 7) != 0)) {
+      Serial.println("[cfg] skip bad link");
+      continue;
+    }
+    Link& dst = cfg.links[cfg.linkCount++];
+    copyUtf8(dst.label, sizeof(dst.label), l["label"]);
+    strlcpy(dst.url, url, sizeof(dst.url));
+  }
+
   Serial.printf("[cfg] loaded, wifi=%d items=%d\n", cfg.wifiCount, cfg.itemCount);
   return true;
 }

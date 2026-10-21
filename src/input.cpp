@@ -25,6 +25,7 @@ static void startFocus() {
 void inputButton(int idx, bool hold) {
   uiWake();
   if (hold) {
+    if (idx == 0 && !M5.Imu.isEnabled()) uiCardForce(true);  // IMUの無いBasic用
     if (idx == 1) uiNextScreen();
     if (idx == 2) uiToggleStyle();
     return;
@@ -84,6 +85,17 @@ void inputFlick(int dir) {
 }
 
 void inputLoop() {
+  // QRカード中はどこを触っても次のリンク
+  if (uiCardActive()) {
+    bool tapped = M5.BtnA.wasClicked() || M5.BtnB.wasClicked() || M5.BtnC.wasClicked();
+    for (int i = 0; i < M5.Touch.getCount(); i++) {
+      if (M5.Touch.getDetail(i).wasClicked()) tapped = true;
+    }
+    if (tapped) uiCardNext();
+    if (M5.BtnA.wasHold()) uiCardForce(false);
+    return;
+  }
+
   // タッチの機種で下にボタンが無い画面なら、ボタンとしては扱わない
   bool touch = M5.Touch.isEnabled();
   bool buttons = !touch || uiHasFooter();

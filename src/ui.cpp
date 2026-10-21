@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "schedule.h"
 #include "screens.h"
+#include "tilt.h"
 #include "timekeep.h"
 
 M5Canvas canvas(&M5.Display);
@@ -25,6 +26,13 @@ static FocusStyle focusStyle = FocusStyle::Normal;
 static const char* STYLE_NAMES[] = {"ふつう", "リング", "タイマー", "水", "マス", "砂時計", "エヴァ"};
 
 static const char* TABS[] = {"時計", "予定", "集中", "在室", "記録"};
+
+// QRカード
+static bool card = false;
+static bool cardForced = false;
+static int cardIndex = 0;
+static uint32_t cardAt = 0;
+static uint8_t baseRotation = 1;
 
 static char toast[64];
 static uint32_t toastUntil = 0;
@@ -100,6 +108,12 @@ static void drawToast() {
 }
 
 static void draw(time_t now) {
+  if (card) {
+    drawCard(cardIndex);
+    canvas.pushSprite(0, 0);
+    return;
+  }
+
   Frame f;
   f.now = now;
   localtime_r(&now, &f.t);
@@ -140,6 +154,7 @@ static void draw(time_t now) {
 }
 
 void uiBegin() {
+  baseRotation = M5.Display.getRotation();
   prefs.begin("ui", false);
   analog = prefs.getBool("analog", cfg.clockAnalog);
   int fs = prefs.getUChar("fstyle", cfg.focusStyle);
@@ -154,7 +169,22 @@ void uiBegin() {
   }
 }
 
+// 逆さまにしたら画面を180度回してQRを出す
+static void updateCard() {
+  bool want = cfg.linkCount > 0 && (cardForced || tiltUpsideDown());
+  if (want != card) {
+    card = want;
+    cardIndex = 0;
+    cardAt = millis();
+    M5.Display.setRotation(card ? (baseRotation + 2) % 4 : baseRotation);
+    dirty = true;
+  }
+  // 8秒ごとに次のリンク
+  if (card && cfg.linkCount > 1 && millis() - cardAt > 8000) uiCardNext();
+}
+
 void uiLoop() {
+  updateCard();
   time_t now = time(nullptr);
   uint32_t remainSec = (focusRemainMs() + 999) / 1000;
   if (toast[0] && (int32_t)(millis() - toastUntil) >= 0) dirty = true;
@@ -244,4 +274,17 @@ void uiShot() {
     }
   }
   Serial.flush();
+}
+
+bool uiCardActive() { return card; }
+
+void uiCardNext() {
+  if (cfg.linkCount == 0) return;
+  cardIndex = (cardIndex + 1) % cfg.linkCount;
+  cardAt = millis();
+  dirty = true;
+}
+
+void uiCardForce(bool on) {
+  cardForced = on;
 }

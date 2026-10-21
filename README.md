@@ -16,6 +16,7 @@ Core2 と Basic でも動く (Basic は物理ボタン、RTC が無いので wif
 | 記録 | 直近7日の研究時間グラフ |
 
 - 集中の表示: ふつう / リング / タイマー (残りが扇形で減る) / 水 (下からたまる) / マス (1分1マス) / 砂時計 / エヴァ
+- 端末を上下逆さまにすると画面が180度回って QR カードになる (GitHub やポートフォリオのリンク)。8秒ごと/タップで次のリンク。戻すと元の画面。Basic は A長押し
 - 下のボタンは集中と在室の画面だけ。集中: 開始 / 停止 / リセット、在室: 入室 / 外出 / 退室
 - 画面切り替え: 上のタブをタップ、左右スワイプ
 - Basic: ボタンが無い画面では A/C で画面送り、B長押しで次の画面、C長押しで表示切り替え
@@ -51,6 +52,7 @@ SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先
 | `clock` | `"digital"` / `"analog"` (長押しで変えた方が優先) |
 | `focus_style` | `"normal"` / `"ring"` / `"dial"` / `"water"` / `"grid"` / `"hourglass"` / `"eva"` |
 | `brightness` | `{ "day", "night", "night_from", "night_to" }` |
+| `card` | `{ "name", "links": [{ "label", "url" }] }` QRカード。http(s) のみ、4つまで |
 | `deadlines` | `[{ "title", "date": "2026-10-27" }]` |
 | `schedule` | 毎週: `{ "dow": "mon,wed", "start", "end", "title", "mtg" }`<br>単発: `{ "date": "2026-10-23", "start", ... }` |
 
@@ -75,7 +77,8 @@ USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
 | `config <bytes>` | config.json 受信 (push_config.py が使う) |
 | `cat <path>` | ログを読む (`/labterm/*.csv` のみ) |
 | `shot` | 画面キャプチャ (`uv run tools/shot.py`) |
-| `btn a` / `hold b` / `tap x y` | 操作のテスト用 |
+| `btn a` / `hold b` / `tap x y` / `press x y` | 操作のテスト用 |
+| `card on` / `card off` / `card next` | QRカードのテスト用 |
 
 ## フォント
 

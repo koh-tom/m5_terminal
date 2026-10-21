@@ -22,6 +22,7 @@ void drawEvaFooter();
 void drawPresence(const Frame& f);
 void drawPresenceFooter();
 void drawStats(const Frame& f);
+void drawCard(int index);
 
 // 時計と予定で使う
 struct Deadline;

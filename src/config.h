@@ -4,6 +4,7 @@
 #define MAX_WIFI 3
 #define MAX_DEADLINES 4
 #define MAX_ITEMS 32
+#define MAX_LINKS 4
 #define TITLE_LEN 48
 #define MAX_CONFIG_SIZE 16384
 
@@ -24,6 +25,12 @@ struct Item {
   int16_t end;    // 無ければ-1
   bool mtg;       // ミーティング扱いにするか
   char title[TITLE_LEN];
+};
+
+// 逆さまにした時に出すQRのリンク
+struct Link {
+  char label[24];
+  char url[128];
 };
 
 struct Config {
@@ -52,6 +59,10 @@ struct Config {
 
   Item items[MAX_ITEMS];
   int itemCount = 0;
+
+  char cardName[48] = "";
+  Link links[MAX_LINKS];
+  int linkCount = 0;
 };
 
 extern Config cfg;

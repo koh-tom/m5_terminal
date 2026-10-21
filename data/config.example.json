@@ -16,5 +16,12 @@
     { "dow": "mon", "start": "10:00", "end": "12:00", "title": "研究室ゼミ", "mtg": true },
     { "dow": "tue,thu", "start": "13:00", "end": "14:30", "title": "TA" },
     { "date": "2026-10-23", "start": "15:00", "title": "先生と面談", "mtg": true }
-  ]
+  ],
+  "card": {
+    "name": "your-name",
+    "links": [
+      { "label": "GitHub", "url": "https://github.com/your-name" },
+      { "label": "Portfolio", "url": "https://example.com/" }
+    ]
+  }
 }

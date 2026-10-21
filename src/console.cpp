@@ -6,6 +6,7 @@
 #include "focus.h"
 #include "input.h"
 #include "storage.h"
+#include "tilt.h"
 #include "timekeep.h"
 #include "ui.h"
 
@@ -25,6 +26,9 @@ static void printStatus() {
     Serial.println("ntp   -");
   }
   Serial.printf("focus %lus / %d\n", (unsigned long)focusTodaySec(), focusTodayCount());
+  float x, y, z;
+  tiltAccel(&x, &y, &z);
+  Serial.printf("accel %.2f %.2f %.2f%s\n", x, y, z, tiltUpsideDown() ? " (upside down)" : "");
   Serial.printf("heap  %u\n", (unsigned)ESP.getFreeHeap());
   Serial.println("OK");
 }
@@ -125,6 +129,12 @@ static void handle(const char* s) {
       return;
     }
     inputTap(x, y);
+    Serial.println("OK");
+  } else if (strcmp(s, "card on") == 0 || strcmp(s, "card off") == 0) {
+    uiCardForce(s[6] == 'n');
+    Serial.println("OK");
+  } else if (strcmp(s, "card next") == 0) {
+    uiCardNext();
     Serial.println("OK");
   } else if (strncmp(s, "press ", 6) == 0) {
     int x, y;
