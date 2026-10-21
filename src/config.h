@@ -55,6 +55,7 @@ struct Config {
   int brightNight = 20;
   int nightFrom = 22 * 60;
   int nightTo = 7 * 60;
+  int darkLux = 1;  // CoreS3: これ以下の明るさなら夜と同じく暗くする (-1で無効)
 
   Deadline deadlines[MAX_DEADLINES];
   int deadlineCount = 0;
