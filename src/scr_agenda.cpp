@@ -31,7 +31,7 @@ static int drawDeadlines(int today, int y) {
       snprintf(dd, sizeof(dd), "D-%d", days);
     }
     int wt = min(textWidth(list[i]->title, Font::Jp13), 96);
-    int w = wt + textWidth(dd, Font::Lat12) + 28;
+    int w = wt + textWidth(dd, Font::Lat12) + 38;
     if (x + w > UI_W - 12) break;
     pill(x, y, w, 26, col::SURFACE);
     canvas.fillSmoothCircle(x + 11, y + 13, 3, deadlineColor(days));
