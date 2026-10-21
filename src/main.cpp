@@ -8,6 +8,7 @@
 #include "presence.h"
 #include "schedule.h"
 #include "storage.h"
+#include "tilt.h"
 #include "timekeep.h"
 #include "ui.h"
 
@@ -29,6 +30,7 @@ void setup() {
   focusBegin();
   presenceBegin();
   inputBegin();
+  tiltBegin();
   uiBegin();
 }
 
@@ -37,6 +39,7 @@ void loop() {
   consoleLoop();
   timeLoop();
   inputLoop();
+  tiltLoop();
   focusLoop();
   presenceLoop();
   reminderLoop();
