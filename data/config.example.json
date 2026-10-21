@@ -6,7 +6,9 @@
   "ntp": "ntp.nict.jp",
   "pomodoro": { "work": 50, "break": 10 },
   "remind_min": 5,
-  "volume": 128,
+  "volume": 0,
+  "clock": "digital",
+  "focus_style": "normal",
   "deadlines": [
     { "title": "論文締切", "date": "2026-10-27" }
   ],
