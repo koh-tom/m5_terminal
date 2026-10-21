@@ -129,6 +129,7 @@ bool loadConfig() {
   cfg.breakMin = clampInt(pomo["break"], cfg.breakMin, 1, 60);
   cfg.longBreakMin = clampInt(pomo["long_break"], cfg.longBreakMin, 1, 120);
   cfg.longEvery = clampInt(pomo["long_every"], cfg.longEvery, 0, 20);
+  cfg.goalMin = clampInt(pomo["goal_min"], cfg.goalMin, 10, 24 * 60);
   cfg.remindMin = clampInt(doc["remind_min"], cfg.remindMin, 0, 60);
   cfg.pauseOnMtg = doc["pause_on_mtg"] | cfg.pauseOnMtg;
   cfg.volume = clampInt(doc["volume"], cfg.volume, 0, 255);

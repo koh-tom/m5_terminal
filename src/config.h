@@ -44,7 +44,8 @@ struct Config {
   int workMin = 50;
   int breakMin = 10;
   int longBreakMin = 20;
-  int longEvery = 4;  // 何回ごとに長い休憩にするか (0で無し)
+  int longEvery = 4;
+  int goalMin = 240;  // 1日の研究時間の目標  // 何回ごとに長い休憩にするか (0で無し)
   int remindMin = 5;
   bool pauseOnMtg = true;
   int volume = 0;  // 0で鳴らさない
