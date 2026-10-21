@@ -178,6 +178,8 @@ bool loadConfig() {
     Link& dst = cfg.links[cfg.linkCount++];
     copyUtf8(dst.label, sizeof(dst.label), l["label"]);
     strlcpy(dst.url, url, sizeof(dst.url));
+    copyUtf8(dst.sub, sizeof(dst.sub), l["sub"]);
+    copyUtf8(dst.icon, sizeof(dst.icon), l["icon"]);
   }
 
   Serial.printf("[cfg] loaded, wifi=%d items=%d\n", cfg.wifiCount, cfg.itemCount);

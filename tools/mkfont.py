@@ -51,6 +51,7 @@ def main():
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--index", type=int, default=0, help="ttcの何番目か (NotoSansCJKのJPは0)")
     ap.add_argument("--chars", default="")
+    ap.add_argument("--codes", default="", help="16進のコードポイントをカンマ区切りで (アイコン用)")
     ap.add_argument("--ascii", action="store_true")
     ap.add_argument("--kana", action="store_true")
     ap.add_argument("--jis1", action="store_true")
@@ -58,6 +59,7 @@ def main():
     args = ap.parse_args()
 
     chars = set(args.chars)
+    chars.update(chr(int(c, 16)) for c in args.codes.split(",") if c)
     if args.ascii:
         chars.update(chr(c) for c in range(0x20, 0x7F))
     if args.kana:

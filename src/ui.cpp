@@ -33,6 +33,7 @@ static bool cardForced = false;
 static int cardIndex = 0;
 static uint32_t cardAt = 0;
 static uint8_t baseRotation = 1;
+static constexpr uint32_t CARD_INTERVAL = 8000;
 
 static char toast[64];
 static uint32_t toastUntil = 0;
@@ -109,7 +110,7 @@ static void drawToast() {
 
 static void draw(time_t now) {
   if (card) {
-    drawCard(cardIndex);
+    drawCard(cardIndex, min(1.0f, (millis() - cardAt) / (float)CARD_INTERVAL));
     canvas.pushSprite(0, 0);
     return;
   }
@@ -179,8 +180,11 @@ static void updateCard() {
     M5.Display.setRotation(card ? (baseRotation + 2) % 4 : baseRotation);
     dirty = true;
   }
-  // 8秒ごとに次のリンク
-  if (card && cfg.linkCount > 1 && millis() - cardAt > 8000) uiCardNext();
+  // 8秒ごとに次のリンク。下のバーを動かすので少しずつ描く
+  if (card && cfg.linkCount > 1) {
+    if (millis() - cardAt > CARD_INTERVAL) uiCardNext();
+    if (millis() - lastFrame >= 100) dirty = true;
+  }
 }
 
 void uiLoop() {

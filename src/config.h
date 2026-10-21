@@ -31,6 +31,8 @@ struct Item {
 struct Link {
   char label[24];
   char url[128];
+  char sub[48];   // 下に小さく出す文字 (無ければURLから作る)
+  char icon[12];  // github / bluesky / web / mail / lab / school / link (無ければURLから決める)
 };
 
 struct Config {

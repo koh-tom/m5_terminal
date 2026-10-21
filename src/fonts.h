@@ -12,6 +12,7 @@ enum class Font : uint8_t {
   Jp20,
   Jp36,   // 在室表示用
   Eva24,  // 明朝 Black
+  Icon30, // Nerd Fontのアイコン (QRカード用)
   Count
 };
 

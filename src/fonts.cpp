@@ -13,6 +13,7 @@ EMBED(jp16)
 EMBED(jp20)
 EMBED(jp36)
 EMBED(eva24)
+EMBED(icon30)
 
 struct Entry {
   const uint8_t* start;
@@ -24,7 +25,7 @@ struct Entry {
 static Entry entries[(int)Font::Count] = {
     {clock_start, clock_end}, {num84_start, num84_end}, {num40_start, num40_end},
     {lat12_start, lat12_end}, {jp13_start, jp13_end},   {jp16_start, jp16_end},
-    {jp20_start, jp20_end},   {jp36_start, jp36_end},   {eva24_start, eva24_end},
+    {jp20_start, jp20_end},   {jp36_start, jp36_end},   {eva24_start, eva24_end}, {icon30_start, icon30_end},
 };
 
 void fontsBegin() {

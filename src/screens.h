@@ -22,7 +22,7 @@ void drawEvaFooter();
 void drawPresence(const Frame& f);
 void drawPresenceFooter();
 void drawStats(const Frame& f);
-void drawCard(int index);
+void drawCard(int index, float elapsed);  // elapsed: 次のリンクまでの進み 0-1
 
 // 時計と予定で使う
 struct Deadline;
