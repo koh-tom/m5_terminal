@@ -131,7 +131,12 @@ bool loadConfig() {
   cfg.pauseOnMtg = doc["pause_on_mtg"] | cfg.pauseOnMtg;
   cfg.volume = clampInt(doc["volume"], cfg.volume, 0, 255);
   if (doc["clock"].is<const char*>()) cfg.clockAnalog = strcmp(doc["clock"], "analog") == 0;
-  if (doc["focus_style"].is<const char*>()) cfg.focusEva = strcmp(doc["focus_style"], "eva") == 0;
+  if (doc["focus_style"].is<const char*>()) {
+    static const char* styles[] = {"normal", "ring", "dial", "water", "grid", "hourglass", "eva"};
+    for (int i = 0; i < 7; i++) {
+      if (strcmp(doc["focus_style"], styles[i]) == 0) cfg.focusStyle = i;
+    }
+  }
 
   JsonObjectConst br = doc["brightness"];
   cfg.brightDay = clampInt(br["day"], cfg.brightDay, 1, 255);

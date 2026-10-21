@@ -39,7 +39,7 @@ struct Config {
   int volume = 0;  // 0で鳴らさない
 
   bool clockAnalog = false;
-  bool focusEva = false;
+  int focusStyle = 0;  // FocusStyleの番号
 
   // 画面の明るさ (夜は暗くする)
   int brightDay = 120;

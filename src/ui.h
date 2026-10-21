@@ -7,6 +7,8 @@ constexpr int UI_TAB_W = 64;
 constexpr int UI_FOOTER_H = 44;
 constexpr int UI_FOOTER_Y = UI_H - UI_FOOTER_H;
 
+enum class FocusStyle { Normal, Ring, Dial, Water, Grid, Hourglass, Eva, Count };
+
 enum class Screen { Clock, Agenda, Focus, Presence, Stats, Count };
 
 void uiBegin();
@@ -22,7 +24,7 @@ void uiMoveScreen(int dir);
 // 下のボタンがある画面か (集中と在室だけ)
 bool uiHasFooter();
 
-// 時計: デジタル/アナログ、集中: 普通/エヴァ
+// 時計: デジタル/アナログ、集中: FocusStyleを順番に
 void uiToggleStyle();
 
 // 少しの間だけ出すメッセージ

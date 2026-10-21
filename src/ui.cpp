@@ -20,7 +20,9 @@ static uint32_t lastFrame = 0;
 
 static Preferences prefs;
 static bool analog = false;
-static bool eva = false;
+static FocusStyle focusStyle = FocusStyle::Normal;
+
+static const char* STYLE_NAMES[] = {"ふつう", "リング", "タイマー", "水", "マス", "砂時計", "エヴァ"};
 
 static const char* TABS[] = {"時計", "予定", "集中", "在室", "記録"};
 
@@ -62,7 +64,7 @@ static void drawHeader() {
   }
 
   bool busy = working();
-  bool evaFocus = eva && screen == Screen::Focus;
+  bool evaFocus = focusStyle == FocusStyle::Eva && screen == Screen::Focus;
   canvas.fillRect(0, 0, UI_W, UI_HEADER_H, evaFocus ? TFT_BLACK : col::BG);
   if (busy) canvas.fillRect(0, 0, UI_W, 2, col::RED);
 
@@ -108,13 +110,27 @@ static void draw(time_t now) {
   switch (screen) {
     case Screen::Clock: drawClock(f, analog); break;
     case Screen::Agenda: drawAgenda(f); break;
-    case Screen::Focus: eva ? drawEva(f) : drawFocus(f); break;
+    case Screen::Focus:
+      switch (focusStyle) {
+        case FocusStyle::Ring: drawFocusRing(f); break;
+        case FocusStyle::Dial: drawFocusDial(f); break;
+        case FocusStyle::Water: drawFocusWater(f); break;
+        case FocusStyle::Grid: drawFocusGrid(f); break;
+        case FocusStyle::Hourglass: drawFocusHourglass(f); break;
+        case FocusStyle::Eva: drawEva(f); break;
+        default: drawFocus(f); break;
+      }
+      break;
     case Screen::Presence: drawPresence(f); break;
     case Screen::Stats: drawStats(f); break;
     default: break;
   }
   if (screen == Screen::Focus) {
-    eva ? drawEvaFooter() : drawFocusFooter();
+    if (focusStyle == FocusStyle::Eva) {
+      drawEvaFooter();
+    } else {
+      drawFocusFooter();
+    }
   } else if (screen == Screen::Presence) {
     drawPresenceFooter();
   }
@@ -126,7 +142,8 @@ static void draw(time_t now) {
 void uiBegin() {
   prefs.begin("ui", false);
   analog = prefs.getBool("analog", cfg.clockAnalog);
-  eva = prefs.getBool("eva", cfg.focusEva);
+  int fs = prefs.getUChar("fstyle", cfg.focusStyle);
+  focusStyle = fs < (int)FocusStyle::Count ? (FocusStyle)fs : FocusStyle::Normal;
 
   // PSRAMが無い機種(Basic)はメモリが足りないので8bitにする
   bool psram = psramFound();
@@ -142,9 +159,11 @@ void uiLoop() {
   uint32_t remainSec = (focusRemainMs() + 999) / 1000;
   if (toast[0] && (int32_t)(millis() - toastUntil) >= 0) dirty = true;
 
-  // エヴァは1/100秒まで出すので速めに描く
-  bool fast = eva && screen == Screen::Focus && focusState() == RunState::Running;
-  if (fast && millis() - lastFrame >= 33) dirty = true;
+  // エヴァは1/100秒、水は波を動かすので速めに描く
+  if (screen == Screen::Focus && focusState() == RunState::Running) {
+    uint32_t interval = focusStyle == FocusStyle::Eva ? 33 : focusStyle == FocusStyle::Water ? 66 : 0;
+    if (interval && millis() - lastFrame >= interval) dirty = true;
+  }
 
   if (dirty || now != lastNow || remainSec != lastRemainSec) {
     dirty = false;
@@ -194,8 +213,9 @@ void uiToggleStyle() {
     analog = !analog;
     prefs.putBool("analog", analog);
   } else if (screen == Screen::Focus) {
-    eva = !eva;
-    prefs.putBool("eva", eva);
+    focusStyle = (FocusStyle)(((int)focusStyle + 1) % (int)FocusStyle::Count);
+    prefs.putUChar("fstyle", (uint8_t)focusStyle);
+    uiToast(STYLE_NAMES[(int)focusStyle]);
   }
   dirty = true;
 }
