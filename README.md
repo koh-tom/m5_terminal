@@ -13,7 +13,7 @@ Core2 と Basic でも動く (Basic は物理ボタン、RTC が無いので wif
 | 予定 | 締切 (D-n) と、今日から1週間の予定。次のMTGまでの時間 |
 | 集中 | 研究 50分 / 休憩 10分 のタイマー。長押しで表示を切り替え (下参照) |
 | 在室 | 入室 / 外出 / 退室 |
-| 記録 | 今日の目標の達成率、連続日数、直近7日の研究時間グラフ (目標を超えた日は緑) |
+| 記録 | 直近7日の研究時間グラフ |
 
 - 集中の表示: ふつう / リング / タイマー (残りが扇形で減る) / 水 (下からたまる) / マス (1分1マス) / 砂時計 / エヴァ
 - 端末を上下逆さまにすると画面が180度回って QR カードになる (GitHub やポートフォリオのリンク)。8秒ごと/タップで次のリンク。戻すと元の画面。Basic は A長押し
@@ -25,8 +25,6 @@ Core2 と Basic でも動く (Basic は物理ボタン、RTC が無いので wif
 - MTG の5分前にヘッダがオレンジになる。始まったらタイマーは自動で一時停止
 - 研究を開始すると自動で入室扱いになる
 - 夜 (22:00-7:00) か、部屋の電気を消すと画面を暗くする (CoreS3の照度センサー)。触るか手をかざすと30秒だけ明るくなる
-- 4回ごとに長めの休憩 (20分)
-- 退室し忘れたら朝4時に自動で退室
 - 音はデフォルトで鳴らない (`volume` で設定)
 
 ## 使い方
@@ -47,14 +45,13 @@ SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先
 | --- | --- |
 | `wifi` | `[{ "ssid", "pass" }]` 3つまで。時刻合わせの時だけつなぐ |
 | `tz`, `ntp` | タイムゾーン (POSIX形式) と NTP サーバ |
-| `pomodoro` | `{ "work": 50, "break": 10, "long_break": 20, "long_every": 4, "goal_min": 240 }` (分) |
+| `pomodoro` | `{ "work": 50, "break": 10 }` (分) |
 | `remind_min` | MTG の何分前に知らせるか。0 で無効 |
 | `pause_on_mtg` | MTG 開始でタイマーを止めるか |
 | `volume` | 0-255。0 で鳴らさない (デフォルト) |
 | `clock` | `"digital"` / `"analog"` (長押しで変えた方が優先) |
 | `focus_style` | `"normal"` / `"ring"` / `"dial"` / `"water"` / `"grid"` / `"hourglass"` / `"eva"` |
 | `brightness` | `{ "day", "night", "night_from", "night_to", "dark_lux" }` dark_lux 以下なら暗くする (デフォルト0.2、負で無効。電気のついた部屋で1-2くらい。`status` で値が見られる) |
-| `auto_out` | `"4:00"` 自動で退室する時刻 |
 | `card` | `{ "name", "links": [{ "label", "url", "sub", "icon" }] }` QRカード。http(s) のみ、4つまで<br>`icon`: github / bluesky / web / mail / lab / school / link (省略時はURLから判定) |
 | `deadlines` | `[{ "title", "date": "2026-10-27" }]` |
 | `schedule` | 毎週: `{ "dow": "mon,wed", "start", "end", "title", "mtg" }`<br>単発: `{ "date": "2026-10-23", "start", ... }` |

@@ -91,7 +91,8 @@ static void nextPhase() {
     logSegment(true);
     save();
     // 休憩はそのまま始める。n回ごとに長め
-    longBreak = cfg.longEvery > 0 && todayCount % cfg.longEvery == 0;
+    // 長めの休憩はいらないので止めておく
+    // longBreak = cfg.longEvery > 0 && todayCount % cfg.longEvery == 0;
     phase = Phase::Break;
     state = RunState::Running;
   } else {

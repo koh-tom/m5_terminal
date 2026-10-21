@@ -43,12 +43,13 @@ struct Config {
 
   int workMin = 50;
   int breakMin = 10;
+  // 長めの休憩と1日の目標は今は使っていない
   int longBreakMin = 20;
-  int longEvery = 4;
-  int goalMin = 240;  // 1日の研究時間の目標  // 何回ごとに長い休憩にするか (0で無し)
+  int longEvery = 4;  // 何回ごとに長い休憩にするか (0で無し)
+  int goalMin = 240;  // 1日の研究時間の目標
   int remindMin = 5;
   bool pauseOnMtg = true;
-  int autoOutMin = 4 * 60;  // この時刻を過ぎたら自動で退室 (-1で無効)
+  int autoOutMin = 4 * 60;  // この時刻を過ぎたら自動で退室 (今は使っていない)
   int volume = 0;  // 0で鳴らさない
 
   bool clockAnalog = false;

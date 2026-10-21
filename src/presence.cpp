@@ -50,6 +50,7 @@ void presenceBegin() {
   checkDay();
 }
 
+#if 0  // 自動退室はいらないので止めておく
 // 退室し忘れ対策。直近の締め時刻より前から入室/外出のままなら退室にする
 static void autoOut() {
   if (state == Presence::Out || cfg.autoOutMin < 0 || !timeValid()) return;
@@ -66,13 +67,14 @@ static void autoOut() {
     presenceSet(Presence::Out);
   }
 }
+#endif
 
 void presenceLoop() {
   static uint32_t last = 0;
   if (millis() - last < 1000) return;
   last = millis();
   checkDay();
-  autoOut();
+  // autoOut();
 }
 
 bool presenceSet(Presence p) {
