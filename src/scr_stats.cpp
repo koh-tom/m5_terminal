@@ -25,7 +25,9 @@ void drawStats(const Frame& f) {
 
   // 平均の線
   uint32_t avg = total / 7;
-  if (avg > 0) {
+  if (total < 60) {
+    text("まだ記録がありません", UI_W / 2, 140, Font::Jp13, col::MUTED, middle_center);
+  } else if (avg >= 180) {
     int ay = bottom - (int)((uint64_t)avg * (bottom - top) / maxSec);
     for (int x = x0; x < UI_W - 14; x += 6) canvas.drawFastHLine(x, ay, 3, col::LINE);
     snprintf(buf, sizeof(buf), "avg %.1f", avg / 3600.0f);
