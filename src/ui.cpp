@@ -51,7 +51,7 @@ static bool isNight(const struct tm& t) {
 static void updateBrightness(const struct tm& t) {
   bool awake = wakeAt && millis() - wakeAt < 30000;
   // 夜の時間帯か、部屋が暗い (電気を消した) ときは暗くする
-  bool dark = cfg.darkLux >= 0 && lightLux() >= 0 && lightLux() <= cfg.darkLux;
+  bool dark = cfg.darkLux >= 0 && lightAvailable() && lightLux() <= cfg.darkLux;
   int b = ((isNight(t) || dark) && !awake) ? cfg.brightNight : cfg.brightDay;
   if (b != brightness) {
     brightness = b;

@@ -17,7 +17,7 @@ constexpr uint8_t ALS_DATA = 0x88;  // CH1 L/H, CH0 L/H
 constexpr uint8_t PS_DATA = 0x8D;
 
 bool ok = false;
-int lux = -1;
+float lux = -1;
 int prox = 0;
 uint32_t lastRead = 0;
 
@@ -31,7 +31,7 @@ bool lightBegin() {
     Serial.printf("[light] not found (%02x)\n", id);
     return false;
   }
-  ok = wr(ALS_CONTR, 0x01)            // ALS 有効, gain x1
+  ok = wr(ALS_CONTR, 0x1D)            // ALS 有効, gain x96 (ガラス越しで暗いので最大)
        && wr(PS_LED, 0x7B)            // 60kHz, 100%, 50mA
        && wr(PS_N_PULSES, 0x08)
        && wr(PS_MEAS_RATE, 0x02)      // 100ms
@@ -49,7 +49,7 @@ void lightLoop() {
   if (M5.In_I2C.readRegister(ADDR, ALS_DATA, a, 4, FREQ)) {
     int ch1 = a[0] | a[1] << 8;
     int ch0 = a[2] | a[3] << 8;
-    // データシートの近似式 (gain1, 100ms)
+    // データシートの近似式 (100ms積分)。gainで割る
     if (ch0 + ch1 == 0) {
       lux = 0;
     } else {
@@ -59,7 +59,7 @@ void lightLoop() {
       else if (r < 0.64f) l = 4.2785f * ch0 - 1.9548f * ch1;
       else if (r < 0.85f) l = 0.5926f * ch0 + 0.1185f * ch1;
       else l = 0;
-      lux = (int)l;
+      lux = max(0.0f, l) / 96.0f;
     }
   }
   uint8_t p[2];
@@ -69,6 +69,6 @@ void lightLoop() {
 }
 
 bool lightAvailable() { return ok; }
-int lightLux() { return ok ? lux : -1; }
+float lightLux() { return ok ? lux : -1; }
 int lightProximity() { return prox; }
 bool lightHover() { return ok && prox > 400; }

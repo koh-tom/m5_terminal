@@ -53,7 +53,7 @@ SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先
 | `volume` | 0-255。0 で鳴らさない (デフォルト) |
 | `clock` | `"digital"` / `"analog"` (長押しで変えた方が優先) |
 | `focus_style` | `"normal"` / `"ring"` / `"dial"` / `"water"` / `"grid"` / `"hourglass"` / `"eva"` |
-| `brightness` | `{ "day", "night", "night_from", "night_to", "dark_lux" }` dark_lux 以下なら暗くする (-1で無効) |
+| `brightness` | `{ "day", "night", "night_from", "night_to", "dark_lux" }` dark_lux 以下なら暗くする (デフォルト0.2、負で無効。電気のついた部屋で1-2くらい。`status` で値が見られる) |
 | `auto_out` | `"4:00"` 自動で退室する時刻 |
 | `card` | `{ "name", "links": [{ "label", "url", "sub", "icon" }] }` QRカード。http(s) のみ、4つまで<br>`icon`: github / bluesky / web / mail / lab / school / link (省略時はURLから判定) |
 | `deadlines` | `[{ "title", "date": "2026-10-27" }]` |

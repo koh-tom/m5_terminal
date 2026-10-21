@@ -147,7 +147,7 @@ bool loadConfig() {
   cfg.brightNight = clampInt(br["night"], cfg.brightNight, 0, 255);
   if (parseHm(br["night_from"]) >= 0) cfg.nightFrom = parseHm(br["night_from"]);
   if (parseHm(br["night_to"]) >= 0) cfg.nightTo = parseHm(br["night_to"]);
-  cfg.darkLux = clampInt(br["dark_lux"], cfg.darkLux, -1, 1000);
+  if (br["dark_lux"].is<float>()) cfg.darkLux = constrain(br["dark_lux"].as<float>(), -1.0f, 1000.0f);
 
   cfg.deadlineCount = 0;
   for (JsonObjectConst d : doc["deadlines"].as<JsonArrayConst>()) {

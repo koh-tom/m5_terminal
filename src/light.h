@@ -6,6 +6,6 @@ bool lightBegin();
 void lightLoop();
 bool lightAvailable();
 
-int lightLux();       // だいたいのlux (-1なら不明)
+float lightLux();     // だいたいのlux (-1なら不明)
 int lightProximity(); // 0-2047、近いほど大きい
 bool lightHover();    // 手をかざしている

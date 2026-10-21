@@ -30,7 +30,7 @@ static void printStatus() {
   float x, y, z;
   tiltAccel(&x, &y, &z);
   Serial.printf("accel %.2f %.2f %.2f%s\n", x, y, z, tiltUpsideDown() ? " (upside down)" : "");
-  if (lightAvailable()) Serial.printf("light %d lux / prox %d\n", lightLux(), lightProximity());
+  if (lightAvailable()) Serial.printf("light %.2f lux / prox %d\n", lightLux(), lightProximity());
   Serial.printf("heap  %u\n", (unsigned)ESP.getFreeHeap());
   Serial.println("OK");
 }
