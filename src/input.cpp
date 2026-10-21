@@ -85,6 +85,9 @@ void inputFlick(int dir) {
 }
 
 void inputLoop() {
+  // ドット絵の間は触っても何もしない
+  if (uiArtActive()) return;
+
   // QRカード中はどこを触っても次のリンク
   if (uiCardActive()) {
     bool tapped = M5.BtnA.wasClicked() || M5.BtnB.wasClicked() || M5.BtnC.wasClicked();

@@ -17,6 +17,7 @@ Core2 と Basic でも動く (Basic は物理ボタン、RTC が無いので wif
 
 - 集中の表示: ふつう / リング / タイマー (残りが扇形で減る) / 水 (下からたまる) / マス (1分1マス) / 砂時計 / エヴァ
 - 端末を上下逆さまにすると画面が180度回って QR カードになる (GitHub やポートフォリオのリンク)。8秒ごと/タップで次のリンク。戻すと元の画面。Basic は A長押し
+- 横に90度倒すとドット絵を表示 (縦画面)。出る時はドットがばらばらに現れて、戻すとドラクエの戦闘みたいに剥がれ落ちてから元の画面に戻る
 - 下のボタンは集中と在室の画面だけ。集中: 開始 / 停止 / リセット、在室: 入室 / 外出 / 退室
 - 画面切り替え: 上のタブをタップ、左右スワイプ
 - Basic: ボタンが無い画面では A/C で画面送り、B長押しで次の画面、C長押しで表示切り替え
@@ -58,6 +59,16 @@ SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先
 
 `mtg: true` の予定が「次のMTG」の対象になる。
 
+## ドット絵
+
+横向きで出す画像は git に入れず、USB で端末に書き込む (内蔵flashの `/pixel.bin`)。
+
+```sh
+uv run tools/push_image.py art.png --grid 120   # 拡大されたドット絵は元のドット数を指定
+```
+
+240x240 まで。`image clear` で消せる。
+
 ## ログ
 
 SD があれば SD、無ければ内蔵flash の `/labterm/` に csv で書く。
@@ -79,6 +90,8 @@ USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
 | `shot` | 画面キャプチャ (`uv run tools/shot.py`) |
 | `btn a` / `hold b` / `tap x y` / `press x y` | 操作のテスト用 |
 | `card on` / `card off` / `card next` | QRカードのテスト用 |
+| `art left` / `art right` / `art off` | ドット絵のテスト用 |
+| `image <bytes>` / `image clear` | ドット絵の受信 (push_image.py が使う) / 削除 |
 
 ## フォント
 

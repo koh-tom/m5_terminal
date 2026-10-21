@@ -7,6 +7,7 @@
 #include "focus.h"
 #include "gfx.h"
 #include "light.h"
+#include "pixelart.h"
 #include "schedule.h"
 #include "screens.h"
 #include "tilt.h"
@@ -35,6 +36,13 @@ static int cardIndex = 0;
 static uint32_t cardAt = 0;
 static uint8_t baseRotation = 1;
 static constexpr uint32_t CARD_INTERVAL = 8000;
+
+// 横向きのドット絵
+enum class Art { Off, In, On, Out };
+static Art art = Art::Off;
+static uint32_t artAt = 0;
+static Orient artOrient = Orient::Up;
+static int artForced = 0;
 
 static char toast[64];
 static uint32_t toastUntil = 0;
@@ -112,6 +120,17 @@ static void drawToast() {
 }
 
 static void draw(time_t now) {
+  if (art != Art::Off) {
+    Frame f;
+    f.now = now;
+    localtime_r(&now, &f.t);
+    f.today = todayYmd();
+    updateBrightness(f.t);
+    int mode = art == Art::In ? 1 : art == Art::Out ? 2 : 0;
+    drawPixelArt(f, mode, millis() - artAt);
+    canvas.pushSprite(0, 0);
+    return;
+  }
   if (card) {
     drawCard(cardIndex, min(1.0f, (millis() - cardAt) / (float)CARD_INTERVAL));
     canvas.pushSprite(0, 0);
@@ -173,14 +192,67 @@ void uiBegin() {
   }
 }
 
+// 画面の向きを変えてcanvasも作り直す
+static void setRotation(uint8_t r) {
+  if (M5.Display.getRotation() == r) return;
+  M5.Display.setRotation(r);
+  if (M5.Display.width() != canvas.width()) {
+    canvas.deleteSprite();
+    canvas.createSprite(M5.Display.width(), M5.Display.height());
+  }
+}
+
+static void setArtOrient(Orient o) {
+  artOrient = o;
+  setRotation(o == Orient::Right ? (baseRotation + 1) % 4 : (baseRotation + 3) % 4);
+}
+
+// 横に倒したらドット絵を出す。戻したら剥がれるアニメのあと元の画面へ
+static void updateArt() {
+  Orient o = artForced == 1 ? Orient::Left : artForced == 2 ? Orient::Right : tiltOrient();
+  bool side = (o == Orient::Left || o == Orient::Right) && artAvailable() && !card;
+  uint32_t t = millis() - artAt;
+
+  switch (art) {
+    case Art::Off:
+      if (side) {
+        setArtOrient(o);
+        art = Art::In;
+        artAt = millis();
+      }
+      break;
+    case Art::In:
+    case Art::On:
+      if (!side) {
+        art = Art::Out;
+        artAt = millis();
+      } else if (art == Art::In && t > pixelAnimMs(false)) {
+        art = Art::On;
+      } else if (art == Art::On && o != artOrient) {
+        setArtOrient(o);
+      }
+      break;
+    case Art::Out:
+      if (t > pixelAnimMs(true)) {
+        art = Art::Off;
+        setRotation(baseRotation);
+        dirty = true;
+      }
+      break;
+  }
+  if (art == Art::In || art == Art::Out) {
+    if (millis() - lastFrame >= 33) dirty = true;
+  }
+}
+
 // 逆さまにしたら画面を180度回してQRを出す
 static void updateCard() {
-  bool want = cfg.linkCount > 0 && (cardForced || tiltUpsideDown());
+  bool want = cfg.linkCount > 0 && art == Art::Off && (cardForced || tiltUpsideDown());
   if (want != card) {
     card = want;
     cardIndex = 0;
     cardAt = millis();
-    M5.Display.setRotation(card ? (baseRotation + 2) % 4 : baseRotation);
+    setRotation(card ? (baseRotation + 2) % 4 : baseRotation);
     dirty = true;
   }
   // 8秒ごとに次のリンク。下のバーを動かすので少しずつ描く
@@ -191,6 +263,7 @@ static void updateCard() {
 }
 
 void uiLoop() {
+  updateArt();
   updateCard();
   time_t now = time(nullptr);
   uint32_t remainSec = (focusRemainMs() + 999) / 1000;
@@ -284,6 +357,8 @@ void uiShot() {
 }
 
 bool uiCardActive() { return card; }
+bool uiArtActive() { return art != Art::Off; }
+void uiArtForce(int side) { artForced = side; }
 
 void uiCardNext() {
   if (cfg.linkCount == 0) return;

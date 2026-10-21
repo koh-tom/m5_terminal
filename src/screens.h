@@ -22,7 +22,11 @@ void drawEvaFooter();
 void drawPresence(const Frame& f);
 void drawPresenceFooter();
 void drawStats(const Frame& f);
-void drawCard(int index, float elapsed);  // elapsed: 次のリンクまでの進み 0-1
+void drawCard(int index, float elapsed);
+
+// mode: 0=表示 1=出てくる 2=剥がれていく、t: アニメ開始からのms
+void drawPixelArt(const Frame& f, int mode, uint32_t t);
+uint32_t pixelAnimMs(bool leaving);  // elapsed: 次のリンクまでの進み 0-1
 
 // 時計と予定で使う
 struct Deadline;

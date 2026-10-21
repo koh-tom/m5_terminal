@@ -27,6 +27,10 @@ bool uiHasFooter();
 // 時計: デジタル/アナログ、集中: FocusStyleを順番に
 void uiToggleStyle();
 
+// ドット絵 (横向きにした時)
+bool uiArtActive();
+void uiArtForce(int side);  // テスト用 0=IMUに従う 1=左 2=右
+
 // QRカード (逆さまにした時)
 bool uiCardActive();
 void uiCardNext();
