@@ -52,7 +52,7 @@ SD カードがあれば `/labterm/config.json` を置いてもいい (SD 優先
 | `clock` | `"digital"` / `"analog"` (長押しで変えた方が優先) |
 | `focus_style` | `"normal"` / `"ring"` / `"dial"` / `"water"` / `"grid"` / `"hourglass"` / `"eva"` |
 | `brightness` | `{ "day", "night", "night_from", "night_to" }` |
-| `card` | `{ "name", "links": [{ "label", "url" }] }` QRカード。http(s) のみ、4つまで |
+| `card` | `{ "name", "links": [{ "label", "url", "sub", "icon" }] }` QRカード。http(s) のみ、4つまで<br>`icon`: github / bluesky / web / mail / lab / school / link (省略時はURLから判定) |
 | `deadlines` | `[{ "title", "date": "2026-10-27" }]` |
 | `schedule` | 毎週: `{ "dow": "mon,wed", "start", "end", "title", "mtg" }`<br>単発: `{ "date": "2026-10-23", "start", ... }` |
 
@@ -87,6 +87,7 @@ USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
 
 - Roboto (Apache-2.0)
 - Noto Sans CJK JP / Noto Serif CJK JP (SIL OFL-1.1)
+- JetBrainsMono Nerd Font のアイコン (SIL OFL-1.1)
 
 ## セキュリティ
 
