@@ -7,7 +7,7 @@
 namespace {
 constexpr uint16_t EVA_ORANGE = rgb(255, 122, 0);
 constexpr uint16_t EVA_ORANGE_DIM = rgb(110, 52, 0);
-constexpr uint16_t EVA_GHOST = rgb(36, 16, 0);
+constexpr uint16_t EVA_GHOST = rgb(24, 10, 0);
 constexpr uint16_t EVA_RED = rgb(255, 36, 36);
 constexpr uint16_t EVA_GREEN = rgb(70, 255, 120);
 constexpr uint16_t EVA_GREEN_DIM = rgb(20, 80, 40);
