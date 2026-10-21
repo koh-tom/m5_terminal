@@ -5,6 +5,7 @@
 #include "focus.h"
 #include "fonts.h"
 #include "input.h"
+#include "light.h"
 #include "presence.h"
 #include "schedule.h"
 #include "storage.h"
@@ -31,6 +32,7 @@ void setup() {
   presenceBegin();
   inputBegin();
   tiltBegin();
+  lightBegin();
   uiBegin();
 }
 
@@ -40,6 +42,12 @@ void loop() {
   timeLoop();
   inputLoop();
   tiltLoop();
+  lightLoop();
+
+  // 手をかざしたら明るくする
+  static bool hover = false;
+  if (lightHover() && !hover) uiWake();
+  hover = lightHover();
   focusLoop();
   presenceLoop();
   reminderLoop();
