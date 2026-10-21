@@ -132,6 +132,7 @@ bool loadConfig() {
   cfg.goalMin = clampInt(pomo["goal_min"], cfg.goalMin, 10, 24 * 60);
   cfg.remindMin = clampInt(doc["remind_min"], cfg.remindMin, 0, 60);
   cfg.pauseOnMtg = doc["pause_on_mtg"] | cfg.pauseOnMtg;
+  if (doc["auto_out"].is<const char*>()) cfg.autoOutMin = parseHm(doc["auto_out"]);
   cfg.volume = clampInt(doc["volume"], cfg.volume, 0, 255);
   if (doc["clock"].is<const char*>()) cfg.clockAnalog = strcmp(doc["clock"], "analog") == 0;
   if (doc["focus_style"].is<const char*>()) {

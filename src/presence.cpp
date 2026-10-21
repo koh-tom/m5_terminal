@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
+#include "config.h"
 #include "storage.h"
 #include "timekeep.h"
 
@@ -49,11 +50,29 @@ void presenceBegin() {
   checkDay();
 }
 
+// 退室し忘れ対策。直近の締め時刻より前から入室/外出のままなら退室にする
+static void autoOut() {
+  if (state == Presence::Out || cfg.autoOutMin < 0 || !timeValid()) return;
+  time_t now = time(nullptr);
+  struct tm t;
+  localtime_r(&now, &t);
+  t.tm_hour = cfg.autoOutMin / 60;
+  t.tm_min = cfg.autoOutMin % 60;
+  t.tm_sec = 0;
+  time_t cut = mktime(&t);
+  if (cut > now) cut -= 24 * 3600;
+  if (since < cut) {
+    Serial.println("[presence] auto out");
+    presenceSet(Presence::Out);
+  }
+}
+
 void presenceLoop() {
   static uint32_t last = 0;
   if (millis() - last < 1000) return;
   last = millis();
   checkDay();
+  autoOut();
 }
 
 bool presenceSet(Presence p) {
