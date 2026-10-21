@@ -5,10 +5,11 @@
 #include "ui.h"
 
 namespace {
-constexpr uint16_t EVA_ORANGE = rgb(255, 122, 0);
-constexpr uint16_t EVA_ORANGE_DIM = rgb(110, 52, 0);
-constexpr uint16_t EVA_GHOST = rgb(24, 10, 0);
-constexpr uint16_t EVA_RED = rgb(255, 36, 36);
+constexpr uint16_t EVA_MAIN = rgb(255, 46, 18);  // 赤寄りのオレンジ
+constexpr uint16_t EVA_DIM = rgb(120, 18, 6);
+constexpr uint16_t EVA_GHOST = rgb(30, 4, 0);
+constexpr uint16_t EVA_RED = rgb(255, 0, 0);
+constexpr uint16_t EVA_YELLOW = rgb(255, 196, 0);
 constexpr uint16_t EVA_GREEN = rgb(70, 255, 120);
 constexpr uint16_t EVA_GREEN_DIM = rgb(20, 80, 40);
 
@@ -54,9 +55,9 @@ void lamp(int x, int y, const char* label, bool lit, uint16_t c) {
   if (lit) {
     canvas.fillRect(x, y, w, h, c);
   } else {
-    canvas.drawRect(x, y, w, h, EVA_ORANGE_DIM);
+    canvas.drawRect(x, y, w, h, EVA_DIM);
   }
-  text(label, x + w / 2, y + h / 2, Font::Jp13, lit ? TFT_BLACK : EVA_ORANGE_DIM, middle_center);
+  text(label, x + w / 2, y + h / 2, Font::Jp13, lit ? TFT_BLACK : EVA_DIM, middle_center);
 }
 
 void hazard(int y, int h, uint16_t c) {
@@ -77,14 +78,14 @@ void drawEva(const Frame& f) {
   bool warn = work && st == RunState::Running && ms < 60000;
   bool blink = (millis() / 250) % 2;
 
-  uint16_t main = work ? EVA_ORANGE : EVA_GREEN;
-  uint16_t dim = work ? EVA_ORANGE_DIM : EVA_GREEN_DIM;
-  if (warn) main = blink ? EVA_RED : rgb(120, 0, 0);
+  uint16_t main = work ? EVA_MAIN : EVA_GREEN;
+  uint16_t dim = work ? EVA_DIM : EVA_GREEN_DIM;
+  if (warn) main = blink ? EVA_RED : rgb(90, 0, 0);
 
   const char* title = st == RunState::Idle ? "待機中" : work ? "活動限界まで" : "活動再開まで";
-  text(title, 12, 47, Font::Eva24, work ? EVA_ORANGE : EVA_GREEN, middle_left);
+  text(title, 12, 47, Font::Eva24, work ? EVA_MAIN : EVA_GREEN, middle_left);
 
-  lamp(184, 37, "内部", work && st == RunState::Running, EVA_ORANGE);
+  lamp(184, 37, "内部", work && st == RunState::Running, EVA_MAIN);
   lamp(228, 37, "外部", !work, EVA_GREEN);
   lamp(272, 37, "停止", st != RunState::Running, EVA_RED);
 
@@ -128,7 +129,7 @@ void drawEva(const Frame& f) {
   snprintf(line, sizeof(line), "本日稼働 %s / %d回", dur, focusTodayCount());
   text(line, 12, 184, Font::Jp13, dim, middle_left);
 
-  if (warn) hazard(UI_FOOTER_Y - 8, 6, blink ? EVA_RED : rgb(90, 0, 0));
+  if (warn) hazard(UI_FOOTER_Y - 8, 6, blink ? EVA_YELLOW : rgb(90, 60, 0));
 }
 
 void drawEvaFooter() {
@@ -139,10 +140,10 @@ void drawEvaFooter() {
     int x = 8 + i * (bw + 8);
     bool lit = (i == 0 && running) || (i == 1 && !running && focusState() == RunState::Paused);
     if (lit) {
-      canvas.fillRect(x, y, bw, h, EVA_ORANGE);
+      canvas.fillRect(x, y, bw, h, EVA_MAIN);
     } else {
-      canvas.drawRect(x, y, bw, h, EVA_ORANGE);
+      canvas.drawRect(x, y, bw, h, EVA_MAIN);
     }
-    text(labels[i], x + bw / 2, y + h / 2, Font::Jp13, lit ? TFT_BLACK : EVA_ORANGE, middle_center);
+    text(labels[i], x + bw / 2, y + h / 2, Font::Jp13, lit ? TFT_BLACK : EVA_MAIN, middle_center);
   }
 }
