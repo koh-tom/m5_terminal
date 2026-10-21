@@ -77,8 +77,11 @@ static void checkDay() {
   save();
 }
 
+static bool longBreak = false;
+
 static uint32_t lengthOf(Phase p) {
-  return (p == Phase::Work ? cfg.workMin : cfg.breakMin) * 60000UL;
+  if (p == Phase::Work) return cfg.workMin * 60000UL;
+  return (longBreak ? cfg.longBreakMin : cfg.breakMin) * 60000UL;
 }
 
 static void nextPhase() {
@@ -87,7 +90,8 @@ static void nextPhase() {
     todayCount++;
     logSegment(true);
     save();
-    // 休憩はそのまま始める
+    // 休憩はそのまま始める。n回ごとに長め
+    longBreak = cfg.longEvery > 0 && todayCount % cfg.longEvery == 0;
     phase = Phase::Break;
     state = RunState::Running;
   } else {
@@ -183,3 +187,5 @@ void focusWeek(uint32_t out[7]) {
     }
   }
 }
+
+bool focusLongBreak() { return phase == Phase::Break && longBreak; }

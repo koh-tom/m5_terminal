@@ -14,7 +14,7 @@ void drawFocus(const Frame& f) {
   RunState st = focusState();
   uint16_t color = work ? col::RED : col::GREEN;
 
-  const char* label = work ? "研究" : "休憩";
+  const char* label = work ? "研究" : focusLongBreak() ? "長めの休憩" : "休憩";
   if (st == RunState::Paused) label = "一時停止中";
   if (st == RunState::Idle && work) label = "待機中";
   int w = textWidth(label, Font::Jp13) + 34;

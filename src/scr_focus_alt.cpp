@@ -26,7 +26,7 @@ void fmtRemain(char* buf, size_t n) {
 
 // 左上に状態、右上に今日の合計
 void topBar() {
-  const char* label = isWork() ? "研究" : "休憩";
+  const char* label = isWork() ? "研究" : focusLongBreak() ? "長めの休憩" : "休憩";
   if (focusState() == RunState::Paused) label = "一時停止中";
   if (focusState() == RunState::Idle && isWork()) label = "待機中";
   int w = textWidth(label, Font::Jp13) + 34;

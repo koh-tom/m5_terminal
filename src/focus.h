@@ -17,6 +17,7 @@ Phase focusPhase();
 RunState focusState();
 uint32_t focusRemainMs();
 uint32_t focusLengthMs();
+bool focusLongBreak();
 
 // 今日の合計
 uint32_t focusTodaySec();
