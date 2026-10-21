@@ -6,6 +6,7 @@
 #include "focus.h"
 #include "input.h"
 #include "light.h"
+#include "pixelart.h"
 #include "storage.h"
 #include "tilt.h"
 #include "timekeep.h"
@@ -57,15 +58,16 @@ static void catFile(const char* path) {
   Serial.println("OK");
 }
 
-// "config <バイト数>" の後にjson本体が来る
-static void receiveConfig(const char* arg) {
+// "config <バイト数>" / "image <バイト数>" の後に本体が来る
+static void receive(const char* arg, size_t maxSize, bool (*save)(const uint8_t*, size_t)) {
   char* end;
   long n = strtol(arg, &end, 10);
-  if (*end != '\0' || n <= 0 || n > MAX_CONFIG_SIZE) {
+  if (*end != '\0' || n <= 0 || (size_t)n > maxSize) {
     Serial.println("ERR bad size");
     return;
   }
-  char* buf = (char*)malloc(n);
+  uint8_t* buf = (uint8_t*)ps_malloc(n);
+  if (!buf) buf = (uint8_t*)malloc(n);
   if (!buf) {
     Serial.println("ERR no memory");
     return;
@@ -74,7 +76,7 @@ static void receiveConfig(const char* arg) {
   Serial.println("READY");
   size_t got = 0;
   uint32_t t0 = millis();
-  while (got < (size_t)n && millis() - t0 < 5000) {
+  while (got < (size_t)n && millis() - t0 < 10000) {
     int avail = Serial.available();
     if (avail > 0) {
       got += Serial.readBytes(buf + got, min((size_t)avail, (size_t)n - got));
@@ -83,17 +85,22 @@ static void receiveConfig(const char* arg) {
     }
   }
 
-  bool ok = got == (size_t)n && saveConfig(buf, n);
-  memset(buf, 0, n);  // パスワード入りなので消しておく
+  bool ok = got == (size_t)n && save(buf, n);
+  memset(buf, 0, n);  // configはパスワード入りなので消しておく
   free(buf);
 
   if (ok) {
-    timeResync();
     uiDirty();
     Serial.println("OK");
   } else {
-    Serial.println(got == (size_t)n ? "ERR invalid config" : "ERR timeout");
+    Serial.println(got == (size_t)n ? "ERR invalid data" : "ERR timeout");
   }
+}
+
+static bool saveConfigData(const uint8_t* d, size_t n) {
+  if (!saveConfig((const char*)d, n)) return false;
+  timeResync();
+  return true;
 }
 
 static void handle(const char* s) {
@@ -102,7 +109,15 @@ static void handle(const char* s) {
   } else if (strncmp(s, "cat ", 4) == 0) {
     catFile(s + 4);
   } else if (strncmp(s, "config ", 7) == 0) {
-    receiveConfig(s + 7);
+    receive(s + 7, MAX_CONFIG_SIZE, saveConfigData);
+  } else if (strncmp(s, "art ", 4) == 0) {
+    uiArtForce(strcmp(s + 4, "left") == 0 ? 1 : strcmp(s + 4, "right") == 0 ? 2 : 0);
+    Serial.println("OK");
+  } else if (strcmp(s, "image clear") == 0) {
+    artClear();
+    Serial.println("OK");
+  } else if (strncmp(s, "image ", 6) == 0) {
+    receive(s + 6, 8 + ART_MAX * ART_MAX * 2, artSave);
   } else if (strncmp(s, "time ", 5) == 0) {
     char* end;
     long long v = strtoll(s + 5, &end, 10);

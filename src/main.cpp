@@ -6,6 +6,7 @@
 #include "fonts.h"
 #include "input.h"
 #include "light.h"
+#include "pixelart.h"
 #include "presence.h"
 #include "schedule.h"
 #include "storage.h"
@@ -33,6 +34,7 @@ void setup() {
   inputBegin();
   tiltBegin();
   lightBegin();
+  artBegin();
   uiBegin();
 }
 
