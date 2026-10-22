@@ -2,11 +2,16 @@
 
 #include <Arduino.h>
 
+#ifndef LABTERM_VERSION
+#define LABTERM_VERSION "dev"
+#endif
+
 #include "config.h"
 #include "focus.h"
 #include "input.h"
 #include "light.h"
 #include "pixelart.h"
+#include "presence.h"
 #include "storage.h"
 #include "tilt.h"
 #include "timekeep.h"
@@ -26,6 +31,13 @@ static void printStatus() {
     Serial.printf("ntp   %s\n", buf);
   } else {
     Serial.println("ntp   -");
+  }
+  {
+    struct tm t;
+    time_t since = presenceSince();
+    localtime_r(&since, &t);
+    Serial.printf("presence %s since %02d:%02d (seq %lu)\n", presenceName(presenceGet()), t.tm_hour,
+                  t.tm_min, (unsigned long)presenceSeq());
   }
   Serial.printf("focus %lus / %d\n", (unsigned long)focusTodaySec(), focusTodayCount());
   float x, y, z;
@@ -103,7 +115,99 @@ static bool saveConfigData(const uint8_t* d, size_t n) {
   return true;
 }
 
+
+// ---- PC (labterm-presence) 向けの機械用コマンド ----
+//   要求: "@q <reqId> <command> [args]"   応答: "@labterm {json}"
+
+static void machineError(unsigned long re, const char* code) {
+  Serial.printf("@labterm {\"type\":\"error\",\"re\":%lu,\"code\":\"%s\"}\n", re, code);
+}
+
+static void machineHello(unsigned long re) {
+  uint64_t mac = ESP.getEfuseMac();
+  char id[18];
+  snprintf(id, sizeof(id), "%02x:%02x:%02x:%02x:%02x:%02x", (int)(mac & 0xFF), (int)(mac >> 8 & 0xFF),
+           (int)(mac >> 16 & 0xFF), (int)(mac >> 24 & 0xFF), (int)(mac >> 32 & 0xFF), (int)(mac >> 40 & 0xFF));
+  Serial.printf("@labterm {\"type\":\"hello\",\"re\":%lu,\"proto\":1,\"device\":\"%s\",\"gen\":%lu,"
+                "\"lastSeq\":%lu,\"fw\":\"%s\",\"epoch\":%lld,\"timeValid\":%s,\"uptime\":%lu}\n",
+                re, id, (unsigned long)presenceGen(), (unsigned long)presenceSeq(), LABTERM_VERSION,
+                (long long)time(nullptr), timeValid() ? "true" : "false", (unsigned long)(millis() / 1000));
+}
+
+struct SinceCtx {
+  unsigned long re;
+  int count;
+};
+
+// "gen,seq,epoch,time,kind,state,voids,source" を1件のeventにする
+static void sinceLine(const char* line, void* arg) {
+  SinceCtx* ctx = (SinceCtx*)arg;
+  const char* f[8];
+  char buf[160];
+  strlcpy(buf, line, sizeof(buf));
+  int n = 0;
+  char* p = buf;
+  f[n++] = p;
+  while (*p && n < 8) {
+    if (*p == ',') {
+      *p = '\0';
+      f[n++] = p + 1;
+    }
+    p++;
+  }
+  if (n < 8) return;
+  bool isVoid = strcmp(f[4], "void") == 0;
+  if (isVoid) {
+    Serial.printf("@labterm {\"type\":\"event\",\"re\":%lu,\"gen\":%s,\"seq\":%s,\"kind\":\"void\","
+                  "\"voids\":%s,\"epoch\":%s,\"source\":\"%s\"}\n",
+                  ctx->re, f[0], f[1], f[6], f[2], f[7]);
+  } else {
+    Serial.printf("@labterm {\"type\":\"event\",\"re\":%lu,\"gen\":%s,\"seq\":%s,\"kind\":\"state\","
+                  "\"state\":\"%s\",\"epoch\":%s,\"source\":\"%s\"}\n",
+                  ctx->re, f[0], f[1], f[5], f[2], f[7]);
+  }
+  ctx->count++;
+}
+
+static void handleMachine(const char* s) {
+  char* end;
+  unsigned long re = strtoul(s, &end, 10);
+  if (end == s || *end != ' ' || re == 0 || re > 99999999UL) return;  // 番号が無いものは無視
+  const char* cmd = end + 1;
+
+  if (strcmp(cmd, "hello") == 0) {
+    machineHello(re);
+  } else if (strcmp(cmd, "state") == 0) {
+    Serial.printf("@labterm {\"type\":\"state\",\"re\":%lu,\"state\":\"%s\",\"since\":%lld,\"seq\":%lu}\n",
+                  re, presenceName(presenceGet()), (long long)presenceSince(), (unsigned long)presenceSeq());
+  } else if (strncmp(cmd, "since ", 6) == 0) {
+    unsigned long g, sq;
+    char tail;
+    if (sscanf(cmd + 6, "%lu %lu%c", &g, &sq, &tail) != 2) {
+      machineError(re, "bad_args");
+      return;
+    }
+    SinceCtx ctx = {re, 0};
+    presenceEach(g, sq, sinceLine, &ctx);
+    Serial.printf("@labterm {\"type\":\"end\",\"re\":%lu,\"count\":%d}\n", re, ctx.count);
+  } else if (strncmp(cmd, "time ", 5) == 0) {
+    long long v = strtoll(cmd + 5, &end, 10);
+    if (*end != '\0' || v < 1700000000LL || v > 4102444800LL) {
+      machineError(re, "bad_args");
+      return;
+    }
+    timeSet((time_t)v);
+    Serial.printf("@labterm {\"type\":\"ok\",\"re\":%lu}\n", re);
+  } else {
+    machineError(re, "unknown");
+  }
+}
+
 static void handle(const char* s) {
+  if (strncmp(s, "@q ", 3) == 0) {
+    handleMachine(s + 3);
+    return;
+  }
   if (strcmp(s, "status") == 0) {
     printStatus();
   } else if (strncmp(s, "cat ", 4) == 0) {
