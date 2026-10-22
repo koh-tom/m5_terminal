@@ -25,6 +25,7 @@ Core2 と Basic でも動く (Basic は物理ボタン、RTC が無いので wif
 - 研究中は集中タブに残り時間が赤で出る
 - MTG の5分前にヘッダがオレンジになる。始まったらタイマーは自動で一時停止
 - 研究を開始すると自動で入室扱いになる
+- 入室/外出/退室を押してから5秒間は、そのボタンが「取消」になる。不在の時は外出を押せない
 - 夜 (22:00-7:00) か、部屋の電気を消すと画面を暗くする (CoreS3の照度センサー)。触るか手をかざすと30秒だけ明るくなる
 - 音はデフォルトで鳴らない (`volume` で設定)
 
@@ -75,7 +76,7 @@ SD があれば SD、無ければ内蔵flash の `/labterm/` に csv で書く�
 
 - `focus.csv` — 研究した区間 (`start,end,sec,done`)
 - `daily.csv` — 日ごとの合計 (`date,sec,count`)
-- `presence.csv` — 入室/外出/退室 (`time,state`)
+- `presence.csv` — 入室/外出/退室 (`gen,seq,epoch,time,kind,state,voids,source`)。旧形式は `presence_v1.csv`
 
 USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
 
@@ -83,7 +84,8 @@ USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
 
 | コマンド | |
 | --- | --- |
-| `status` | 時刻、SD、NTP、今日の合計など |
+| `status` | 時刻、SD、NTP、在室状態、今日の合計など |
+| `@q <id> hello` / `state` / `since <gen> <seq>` / `time <epoch>` | PC側 (labterm-presence) 用。応答は `@labterm {json}` |
 | `time <unix秒>` | 時刻合わせ (settime.py が使う) |
 | `config <bytes>` | config.json 受信 (push_config.py が使う) |
 | `cat <path>` | ログを読む (`/labterm/*.csv` のみ) |
@@ -101,6 +103,11 @@ USB シリアル (115200) で `cat /labterm/focus.csv` で読める。
 - Roboto (Apache-2.0)
 - Noto Sans CJK JP / Noto Serif CJK JP (SIL OFL-1.1)
 - JetBrainsMono Nerd Font のアイコン (SIL OFL-1.1)
+
+## labterm-presence との共存
+
+PC 側の daemon がポートを使っている間は、ツールや書き込みを `labterm release -- <コマンド>` 経由で実行する
+(例: `labterm release -- pio run -t upload`)。ツールはポートが使用中ならその案内を出す。
 
 ## セキュリティ
 
