@@ -49,10 +49,25 @@ void drawPresenceFooter() {
   static const Presence ps[] = {Presence::In, Presence::Away, Presence::Out};
   static const char* labels[] = {"入室", "外出", "退室"};
   const int bw = 92, h = 32, y = UI_FOOTER_Y + 6;
+  uint32_t undoLeft = presenceUndoLeftMs();
+
   for (int i = 0; i < 3; i++) {
     int x = 10 + i * (bw + 12);
     bool cur = presenceGet() == ps[i];
+
+    // 変えた直後はそのボタンが「取消」になる。下のバーは残り時間
+    if (undoLeft > 0 && presenceUndoTarget() == ps[i]) {
+      pill(x, y, bw, h, col::SURFACE2);
+      text("取消", x + bw / 2, y + h / 2 - 2, Font::Jp13, col::TEXT, middle_center);
+      int bl = (bw - 32) * undoLeft / 5000;
+      pill(x + 16, y + h - 7, bw - 32, 2, col::SURFACE);
+      if (bl > 1) pill(x + 16, y + h - 7, bl, 2, stateColor(ps[i]));
+      continue;
+    }
+
+    bool enabled = presenceCanSet(ps[i]);
     pill(x, y, bw, h, cur ? stateColor(ps[i]) : col::SURFACE);
-    text(labels[i], x + bw / 2, y + h / 2, Font::Jp13, cur ? col::BG : col::TEXT, middle_center);
+    text(labels[i], x + bw / 2, y + h / 2, Font::Jp13, cur ? col::BG : enabled ? col::TEXT : col::MUTED,
+         middle_center);
   }
 }

@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "light.h"
 #include "pixelart.h"
+#include "presence.h"
 #include "schedule.h"
 #include "screens.h"
 #include "tilt.h"
@@ -263,6 +264,12 @@ static void updateCard() {
 }
 
 void uiLoop() {
+  // 取消のバーを動かす (消えた時にも1回描く)
+  static bool undoShown = false;
+  bool undo = screen == Screen::Presence && presenceUndoLeftMs() > 0;
+  if ((undo && millis() - lastFrame >= 100) || undo != undoShown) dirty = true;
+  undoShown = undo;
+
   updateArt();
   updateCard();
   time_t now = time(nullptr);
