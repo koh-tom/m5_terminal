@@ -6,3 +6,6 @@ backup/
 
 # 実機用の設定 (wifiのパスワード入り)
 data/config.json
+
+# 要件定義やプロトコルのメモ (git管理外)
+docs/
