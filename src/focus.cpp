@@ -41,8 +41,12 @@ static void logSegment(bool done) {
     char a[24], b[24], line[80];
     fmtTime(segStart, a, sizeof(a));
     fmtTime(time(nullptr), b, sizeof(b));
+    time_t end = time(nullptr);
     snprintf(line, sizeof(line), "%s,%s,%lu,%d", a, b, (unsigned long)(segMs / 1000), done ? 1 : 0);
     logAppend("/labterm/focus.csv", line, "start,end,sec,done");
+    // PC (labterm-presence) に知らせる
+    Serial.printf("@labterm {\"type\":\"focus\",\"start\":%lld,\"end\":%lld,\"sec\":%lu,\"done\":%s}\n",
+                  (long long)segStart, (long long)end, (unsigned long)(segMs / 1000), done ? "true" : "false");
   }
   segStart = 0;
   segMs = 0;
@@ -190,3 +194,41 @@ void focusWeek(uint32_t out[7]) {
 }
 
 bool focusLongBreak() { return phase == Phase::Break && longBreak; }
+
+// "2026-10-21 11:24:28" (端末のタイムゾーン) → UNIX秒
+static time_t parseLocal(const char* s) {
+  struct tm t = {};
+  if (sscanf(s, "%d-%d-%d %d:%d:%d", &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min,
+             &t.tm_sec) != 6) {
+    return 0;
+  }
+  t.tm_year -= 1900;
+  t.tm_mon -= 1;
+  t.tm_isdst = -1;
+  return mktime(&t);
+}
+
+void focusEach(time_t after, FocusSessionFn fn, void* arg) {
+  File f = logFS().open("/labterm/focus.csv", FILE_READ);
+  if (!f) return;
+  char line[96];
+  while (f.available()) {
+    size_t n = f.readBytesUntil('\n', line, sizeof(line) - 1);
+    line[n] = '\0';
+    char* comma = strchr(line, ',');
+    if (!comma) continue;
+    *comma = '\0';
+    char* rest = comma + 1;
+    char* comma2 = strchr(rest, ',');
+    if (!comma2) continue;
+    *comma2 = '\0';
+    time_t start = parseLocal(line);
+    time_t end = parseLocal(rest);
+    if (start == 0 || end == 0 || start <= after) continue;  // ヘッダや古いもの
+    unsigned long sec = 0;
+    int done = 0;
+    if (sscanf(comma2 + 1, "%lu,%d", &sec, &done) != 2) continue;
+    fn(start, end, sec, done != 0, arg);
+  }
+  f.close();
+}

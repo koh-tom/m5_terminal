@@ -169,6 +169,18 @@ static void sinceLine(const char* line, void* arg) {
   ctx->count++;
 }
 
+struct FocusCtx {
+  unsigned long re;
+  int count;
+};
+
+static void focusLine(time_t start, time_t end, unsigned long sec, bool done, void* arg) {
+  FocusCtx* ctx = (FocusCtx*)arg;
+  Serial.printf("@labterm {\"type\":\"focus\",\"re\":%lu,\"start\":%lld,\"end\":%lld,\"sec\":%lu,\"done\":%s}\n",
+                ctx->re, (long long)start, (long long)end, sec, done ? "true" : "false");
+  ctx->count++;
+}
+
 static void handleMachine(const char* s) {
   char* end;
   unsigned long re = strtoul(s, &end, 10);
@@ -189,6 +201,15 @@ static void handleMachine(const char* s) {
     }
     SinceCtx ctx = {re, 0};
     presenceEach(g, sq, sinceLine, &ctx);
+    Serial.printf("@labterm {\"type\":\"end\",\"re\":%lu,\"count\":%d}\n", re, ctx.count);
+  } else if (strncmp(cmd, "focus ", 6) == 0) {
+    long long after = strtoll(cmd + 6, &end, 10);
+    if (*end != '\0' || after < 0) {
+      machineError(re, "bad_args");
+      return;
+    }
+    FocusCtx ctx = {re, 0};
+    focusEach((time_t)after, focusLine, &ctx);
     Serial.printf("@labterm {\"type\":\"end\",\"re\":%lu,\"count\":%d}\n", re, ctx.count);
   } else if (strncmp(cmd, "time ", 5) == 0) {
     long long v = strtoll(cmd + 5, &end, 10);
