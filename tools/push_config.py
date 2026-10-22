@@ -10,7 +10,8 @@ import argparse
 import json
 import time
 
-import serial
+from port import open_port
+
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
     if len(data) > 16384:
         raise SystemExit("config.json is too large (max 16KB)")
 
-    with serial.Serial(args.port, 115200, timeout=3) as s:
+    with open_port(args.port) as s:
         time.sleep(0.2)
         s.reset_input_buffer()
         s.write(f"config {len(data)}\n".encode())

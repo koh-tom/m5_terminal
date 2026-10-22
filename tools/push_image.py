@@ -14,8 +14,9 @@ import struct
 import time
 
 import numpy as np
-import serial
 from PIL import Image
+
+from port import open_port
 
 MAX = 240
 
@@ -43,7 +44,7 @@ def encode(im):
 
 
 def send(port, cmd, data):
-    with serial.Serial(port, 115200, timeout=3) as s:
+    with open_port(port) as s:
         time.sleep(0.2)
         s.reset_input_buffer()
         s.write(f"{cmd} {len(data)}\n".encode())

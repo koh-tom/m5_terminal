@@ -9,8 +9,9 @@
 import argparse
 import time
 
-import serial
 from PIL import Image
+
+from port import open_port
 
 
 def rgb565_to_rgb(data):
@@ -28,7 +29,7 @@ def main():
     ap.add_argument("-o", "--out", default="shot.png")
     args = ap.parse_args()
 
-    with serial.Serial(args.port, 115200, timeout=3) as s:
+    with open_port(args.port) as s:
         time.sleep(0.2)
         s.reset_input_buffer()
         s.write(b"shot\n")

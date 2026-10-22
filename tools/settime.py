@@ -9,7 +9,8 @@
 import argparse
 import time
 
-import serial
+from port import open_port
+
 
 
 def main():
@@ -17,7 +18,7 @@ def main():
     ap.add_argument("-p", "--port", default="/dev/ttyACM0")
     args = ap.parse_args()
 
-    with serial.Serial(args.port, 115200, timeout=2) as s:
+    with open_port(args.port, timeout=2) as s:
         time.sleep(0.2)
         s.reset_input_buffer()
         s.write(f"time {int(time.time())}\n".encode())
