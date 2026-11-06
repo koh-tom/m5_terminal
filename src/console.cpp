@@ -11,6 +11,7 @@
 #include "focus.h"
 #include "input.h"
 #include "light.h"
+#include "nfc.h"
 #include "pixelart.h"
 #include "presence.h"
 #include "storage.h"
@@ -232,6 +233,9 @@ static void handle(const char* s) {
   }
   if (strcmp(s, "status") == 0) {
     printStatus();
+  } else if (strcmp(s, "nfc") == 0) {
+    nfcProbe(Serial);
+    Serial.println("OK");
   } else if (strcmp(s, "i2c") == 0) {
     // Port A (外付けユニット) につながっている I2C の機器を探す
     M5.Ex_I2C.begin();
