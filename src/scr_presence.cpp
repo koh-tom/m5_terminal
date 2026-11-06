@@ -1,4 +1,5 @@
 #include "gfx.h"
+#include "nfc.h"
 #include "presence.h"
 #include "screens.h"
 #include "ui.h"
@@ -50,6 +51,7 @@ void drawPresenceFooter() {
   static const char* labels[] = {"入室", "外出", "退室"};
   const int bw = 92, h = 32, y = UI_FOOTER_Y + 6;
   uint32_t undoLeft = presenceUndoLeftMs();
+  bool locked = nfcLocked();  // カードをかざすまで押せない
 
   for (int i = 0; i < 3; i++) {
     int x = 10 + i * (bw + 12);
@@ -65,7 +67,7 @@ void drawPresenceFooter() {
       continue;
     }
 
-    bool enabled = presenceCanSet(ps[i]);
+    bool enabled = !locked && (presenceCanSet(ps[i]) || undoLeft > 0);
     pill(x, y, bw, h, cur ? stateColor(ps[i]) : col::SURFACE);
     text(labels[i], x + bw / 2, y + h / 2, Font::Jp13, cur ? col::BG : enabled ? col::TEXT : col::MUTED,
          middle_center);

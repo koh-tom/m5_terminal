@@ -3,6 +3,7 @@
 #include <M5Unified.h>
 
 #include "focus.h"
+#include "nfc.h"
 #include "presence.h"
 #include "ui.h"
 
@@ -13,9 +14,9 @@ void inputBegin() {
   }
 }
 
-// 研究を始めたら自動で入室にする
+// 研究を始めたら自動で入室にする (カードでロックしている時はしない)
 static void startFocus() {
-  if (focusPhase() == Phase::Work && presenceGet() != Presence::In &&
+  if (focusPhase() == Phase::Work && presenceGet() != Presence::In && !nfcLocked() &&
       presenceSet(Presence::In, PresenceSource::Focus)) {
     uiToast("入室しました");
   }
@@ -41,10 +42,14 @@ void inputButton(int idx, bool hold) {
   if (uiScreen() == Screen::Presence) {
     static const Presence ps[] = {Presence::In, Presence::Away, Presence::Out};
     static const char* msg[] = {"入室しました", "外出します", "おつかれさまでした"};
-    if (presenceUndoLeftMs() > 0 && presenceUndoTarget() == ps[idx]) {
+    if (nfcLocked()) {
+      uiToast("カードをかざしてください");
+    } else if (presenceUndoLeftMs() > 0 && presenceUndoTarget() == ps[idx]) {
       if (presenceUndo()) uiToast("取り消しました");
-    } else if (presenceGet() != ps[idx] && presenceCanSet(ps[idx])) {
-      uiToast(presenceSet(ps[idx]) ? msg[idx] : "時刻が未設定です");
+    } else if (presenceGet() != ps[idx]) {
+      // カードで退室した直後に「外出」なら、退室を取り消して外出にする
+      if (!presenceCanSet(ps[idx]) && presenceUndoLeftMs() > 0) presenceUndo();
+      if (presenceCanSet(ps[idx])) uiToast(presenceSet(ps[idx]) ? msg[idx] : "時刻が未設定です");
     }
   } else {
     switch (idx) {
