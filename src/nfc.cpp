@@ -27,7 +27,6 @@ m5::nfc::NFCLayerF nfcF{unit};
 bool ready = false;
 
 constexpr int MAX_CARDS = 8;
-constexpr uint32_t UNLOCK_MS = 10000;
 constexpr uint32_t POLL_MS = 400;
 constexpr uint32_t GONE_MS = 1500;  // これだけ見えなかったら離したとみなす
 
@@ -35,8 +34,6 @@ Preferences prefs;
 uint8_t key[32];  // カードIDのハッシュとカードのパスワードを作る鍵 (端末ごと)
 uint8_t cards[MAX_CARDS][16];
 int cardCount = 0;
-uint32_t unlockedAt = 0;
-bool unlocked = false;
 
 // ---- カードに書く記録 (NTAG213/215/216 のユーザー領域) ----
 // page 4-8: ヘッダ、page 9-: 4バイトずつのリング (上2bitが状態、下30bitが2026年からの秒)
@@ -285,8 +282,6 @@ void onCard(const Seen& s) {
     beep(2, 800);
     return;
   }
-  unlocked = true;
-  unlockedAt = millis();
   uiSetScreen(Screen::Presence);
 
   if (!timeValid()) {
@@ -427,12 +422,7 @@ bool nfcBegin() {
 
 bool nfcReady() { return ready; }
 
-bool nfcLocked() {
-  if (!ready || cardCount == 0) return false;
-  if (unlocked && millis() - unlockedAt < UNLOCK_MS) return false;
-  unlocked = false;
-  return true;
-}
+bool nfcLocked() { return ready && cardCount > 0; }
 
 void nfcLoop() {
   if (!ready) return;
@@ -485,11 +475,8 @@ void nfcCommand(const char* args, Print& out) {
   } else if (strcmp(args, "clear") == 0) {
     cardCount = 0;
     prefs.remove("cards");
-  } else if (strcmp(args, "unlock") == 0) {
-    unlocked = true;
-    unlockedAt = millis();
   } else {
-    out.println("ERR usage: nfc [probe|add|format|list|del <n>|clear|read|unlock]");
+    out.println("ERR usage: nfc [probe|add|format|list|del <n>|clear|read]");
     return;
   }
   out.println("OK");

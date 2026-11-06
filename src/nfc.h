@@ -7,8 +7,8 @@ bool nfcBegin();
 bool nfcReady();
 void nfcLoop();
 
-// カードが登録されていて、かざしてから10秒以上たっている (在室ボタンを押せない)
+// カードが登録されている (在室はカードでだけ変えられる。ボタンは使えない)
 bool nfcLocked();
 
-// "nfc ..." コマンド (probe / add / format / list / del <n> / clear / read / unlock)
+// "nfc ..." コマンド (probe / add / format / list / del <n> / clear / read)
 void nfcCommand(const char* args, Print& out);
