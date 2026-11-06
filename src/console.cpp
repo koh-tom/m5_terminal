@@ -1,6 +1,7 @@
 #include "console.h"
 
 #include <Arduino.h>
+#include <M5Unified.h>
 
 #ifndef LABTERM_VERSION
 #define LABTERM_VERSION "dev"
@@ -231,6 +232,17 @@ static void handle(const char* s) {
   }
   if (strcmp(s, "status") == 0) {
     printStatus();
+  } else if (strcmp(s, "i2c") == 0) {
+    // Port A (外付けユニット) につながっている I2C の機器を探す
+    M5.Ex_I2C.begin();
+    bool found[128] = {};
+    M5.Ex_I2C.scanID(found);
+    Serial.printf("portA sda=%d scl=%d:", M5.Ex_I2C.getSDA(), M5.Ex_I2C.getSCL());
+    for (int a = 1; a < 127; a++) {
+      if (found[a]) Serial.printf(" 0x%02x", a);
+    }
+    Serial.println();
+    Serial.println("OK");
   } else if (strncmp(s, "cat ", 4) == 0) {
     catFile(s + 4);
   } else if (strncmp(s, "config ", 7) == 0) {
