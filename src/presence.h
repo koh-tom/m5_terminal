@@ -6,7 +6,7 @@
 enum class Presence : uint8_t { Out, In, Away };
 
 // 誰が変えたか (ログとPCへの通知に載る)
-enum class PresenceSource : uint8_t { Button, Focus };
+enum class PresenceSource : uint8_t { Button, Focus, Card };
 
 void presenceBegin();
 void presenceLoop();

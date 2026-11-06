@@ -47,6 +47,7 @@ void loop() {
   inputLoop();
   tiltLoop();
   lightLoop();
+  nfcLoop();
 
   // 手をかざしたら明るくする
   static bool hover = false;

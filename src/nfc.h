@@ -1,9 +1,14 @@
 #pragma once
-#include <Arduino.h>
+#include <Print.h>
 
-// Unit NFC (ST25R3916) を Port A で使う。無ければ何もしない
+// Unit NFC (ST25R3916, Port A)
+// 登録したカードをかざすと入室 / 退室。登録はUSBからだけ
 bool nfcBegin();
 bool nfcReady();
+void nfcLoop();
 
-// 今かざしてあるカードを1回読んで種類と番号を出す (確認用)
-void nfcProbe(Print& out);
+// カードが登録されていて、かざしてから10秒以上たっている (在室ボタンを押せない)
+bool nfcLocked();
+
+// "nfc ..." コマンド (probe / add / format / list / del <n> / clear / read / unlock)
+void nfcCommand(const char* args, Print& out);

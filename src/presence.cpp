@@ -34,7 +34,7 @@ static struct {
 } last;
 
 static const char* NAMES[] = {"out", "in", "away"};
-static const char* SOURCES[] = {"button", "focus"};
+static const char* SOURCES[] = {"button", "focus", "card"};
 
 static void save() {
   prefs.putUChar("state", (uint8_t)state);

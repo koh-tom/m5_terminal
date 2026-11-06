@@ -233,9 +233,8 @@ static void handle(const char* s) {
   }
   if (strcmp(s, "status") == 0) {
     printStatus();
-  } else if (strcmp(s, "nfc") == 0) {
-    nfcProbe(Serial);
-    Serial.println("OK");
+  } else if (strcmp(s, "nfc") == 0 || strncmp(s, "nfc ", 4) == 0) {
+    nfcCommand(s[3] ? s + 4 : "", Serial);
   } else if (strcmp(s, "i2c") == 0) {
     // Port A (外付けユニット) につながっている I2C の機器を探す
     M5.Ex_I2C.begin();
